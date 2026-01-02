@@ -1,0 +1,17 @@
+{
+  "name": "@wdng/db",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/bcryptjs": "^2.4.6",
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0"
+  }
+}

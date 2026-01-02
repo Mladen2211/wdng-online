@@ -1,26 +1,23 @@
 {
-  "name": "wdng-online",
-  "version": "0.1.0",
+  "name": "wdng-monorepo",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.1.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "dev": "npm run dev --workspace=packages/app",
+    "dev:api": "npm run dev --workspace=packages/api",
+    "build": "npm run build --workspace=packages/app",
+    "build:api": "npm run build --workspace=packages/api",
+    "start": "npm run start --workspace=packages/app",
+    "start:api": "npm run start --workspace=packages/api",
+    "db:migrate": "npm run migrate --workspace=packages/db",
+    "install:all": "npm install"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.36.5"
   }
 }
