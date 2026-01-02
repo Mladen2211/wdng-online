@@ -4,14 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Palette, Check, Layout, Camera, Star, Edit3, Image as ImageIcon, Type, Smartphone, Plus, Trash2, HelpCircle, Save, AlignLeft, Grid } from 'lucide-react';
 import { WeddingData } from '@/lib/types';
 import { THEMES } from '@/lib/constants';
+import GuestUploader from './GuestUploader';
+import GuestGallery from './GuestGallery';
 
 // --- PREVIEW RENDERER ---
 
-interface WeddingPreviewProps {
-  data: WeddingData;
+export interface SiteInfo {
+  siteId: string;
+  ownerClerkId?: string;
 }
 
-const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data }) => {
+interface WeddingPreviewProps {
+  data: WeddingData;
+  siteInfo?: SiteInfo;
+  isPreview?: boolean;  // If true, don't show uploader/gallery (just preview mode in builder)
+}
+
+const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPreview = false }) => {
   const { config, global, sections } = data;
   const theme = THEMES[config.selectedTheme].colors;
   const layout = config.selectedLayout;
@@ -120,7 +129,15 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data }) => {
       {/* 2. DYNAMIC SECTIONS LOOP */}
       <div className="flex flex-col">
         {sections.map((section, index) => (
-          <SectionRenderer key={section.id} section={section} theme={theme} layout={layout} sectionIndex={index} />
+          <SectionRenderer 
+            key={section.id} 
+            section={section} 
+            theme={theme} 
+            layout={layout} 
+            sectionIndex={index} 
+            isPreview={isPreview}
+            siteInfo={siteInfo}
+          />
         ))}
       </div>
 
@@ -146,6 +163,13 @@ interface HeroRendererProps {
 }
 
 const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, timeLeft }) => {
+  // Use configurable labels with fallbacks
+  const daysLabel = global.daysLabel || 'Days';
+  const hoursLabel = global.hoursLabel || 'Hrs';
+  const minutesLabel = global.minutesLabel || 'Min';
+  const secondsLabel = global.secondsLabel || 'Sec';
+  const heroTagline = global.heroTagline || 'The Wedding';
+
   if (layout === 'vogue') {
     return (
       <header className="pt-20 pb-12 px-6 bg-[#FAFAF9]">
@@ -155,12 +179,12 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
          </div>
          <div className="relative w-full h-[50vh] overflow-hidden mb-6 group">
             <img src={global.heroImage} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000" alt="Hero" />
-            <div className="absolute bottom-0 left-0 bg-white px-4 py-2"><p className={`font-serif text-xl ${theme.text} italic`}>The Wedding</p></div>
+            <div className="absolute bottom-0 left-0 bg-white px-4 py-2"><p className={`font-serif text-xl ${theme.text} italic`}>{heroTagline}</p></div>
          </div>
          <div className="border-t border-stone-300 pt-6 flex justify-between items-start">
             <div className="flex gap-8">
-               <div><span className="block text-[10px] uppercase text-stone-400">Days</span><span className={`font-serif text-2xl ${theme.text}`}>{timeLeft.days}</span></div>
-               <div><span className="block text-[10px] uppercase text-stone-400">Hrs</span><span className={`font-serif text-2xl ${theme.text}`}>{timeLeft.hours}</span></div>
+               <div><span className="block text-[10px] uppercase text-stone-400">{daysLabel}</span><span className={`font-serif text-2xl ${theme.text}`}>{timeLeft.days}</span></div>
+               <div><span className="block text-[10px] uppercase text-stone-400">{hoursLabel}</span><span className={`font-serif text-2xl ${theme.text}`}>{timeLeft.hours}</span></div>
             </div>
             <h1 className={`font-serif text-6xl md:text-8xl leading-[0.8] ${theme.text} tracking-tighter text-right`}>{global.groom}</h1>
          </div>
@@ -178,9 +202,9 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
             <div className="absolute -bottom-5 -left-5 bg-white p-4 rounded-full shadow-lg"><Heart className={theme.accent} fill="currentColor" size={24}/></div>
          </div>
          <div className="flex gap-6 justify-center">
-            <CountdownSimple val={timeLeft.days} label="Days" theme={theme} />
+            <CountdownSimple val={timeLeft.days} label={daysLabel} theme={theme} />
             <div className="w-px bg-stone-200 h-8 self-center"></div>
-            <CountdownSimple val={timeLeft.hours} label="Hrs" theme={theme} />
+            <CountdownSimple val={timeLeft.hours} label={hoursLabel} theme={theme} />
          </div>
       </header>
     );
@@ -202,10 +226,10 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
           <span className="flex items-center gap-2 backdrop-blur-md bg-white/10 px-4 py-2 rounded-full border border-white/10"><Calendar size={16}/> {global.dateFull} {global.dateTime && `• ${global.dateTime}`}</span>
         </div>
         <div className="grid grid-cols-4 gap-2 max-w-md mx-auto bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-2xl">
-          <CountdownImmersive val={timeLeft.days} label="Dana" />
-          <CountdownImmersive val={timeLeft.hours} label="Sati" />
-          <CountdownImmersive val={timeLeft.minutes} label="Min" />
-          <CountdownImmersive val={timeLeft.seconds} label="Sek" />
+          <CountdownImmersive val={timeLeft.days} label={daysLabel} />
+          <CountdownImmersive val={timeLeft.hours} label={hoursLabel} />
+          <CountdownImmersive val={timeLeft.minutes} label={minutesLabel} />
+          <CountdownImmersive val={timeLeft.seconds} label={secondsLabel} />
         </div>
       </div>
     </header>
@@ -217,9 +241,11 @@ interface SectionRendererProps {
   theme: any;
   layout: string;
   sectionIndex: number;
+  isPreview: boolean;
+  siteInfo?: SiteInfo;
 }
 
-const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layout, sectionIndex }) => {
+const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layout, sectionIndex, isPreview, siteInfo }) => {
   const { type, data } = section;
 
   if (type === 'events') {
@@ -260,29 +286,76 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
   }
 
   if (type === 'photos') {
+    const hasAlbum = data.albumId && siteInfo?.ownerClerkId && !isPreview;
+    
+    // Use custom labels or defaults
+    const galleryLabel = data.galleryLabel || 'Gallery';
+    const viewAlbumLabel = data.viewAlbumLabel || data.buttonLabel || 'View Album';
+    const openInPhotosLabel = data.openInPhotosLabel || 'Open in Google Photos';
+    const comingSoonTitle = data.comingSoonTitle || 'Photo Sharing Coming Soon';
+    const comingSoonSubtitle = data.comingSoonSubtitle || 'The couple is setting up their photo album.';
+    
     return (
       <section id={`section-${sectionIndex}`} className="py-20 px-6 bg-white">
          <div className="max-w-5xl mx-auto">
-            <div className={`grid md:grid-cols-2 overflow-hidden ${layout === 'arch' ? 'rounded-[3rem] border-4 border-stone-100' : 'rounded-3xl'} shadow-2xl bg-stone-50`}>
+            {/* Header Card */}
+            <div className={`grid md:grid-cols-2 overflow-hidden ${layout === 'arch' ? 'rounded-[3rem] border-4 border-stone-100' : 'rounded-3xl'} shadow-2xl bg-stone-50 mb-12`}>
                <div className="p-12 flex flex-col justify-center">
                   <div className={`inline-flex self-start items-center gap-2 px-3 py-1 ${theme.accentLight} ${theme.accent} rounded-full text-[10px] font-bold uppercase tracking-wide mb-6`}>
-                     <Share2 size={12} /> Gallery
+                     <Share2 size={12} /> {galleryLabel}
                   </div>
                   <h2 className={`font-serif text-4xl ${theme.text} mb-4`} dangerouslySetInnerHTML={{ __html: data.title }} />
                   <p className={`${theme.textMuted} mb-8`}>{data.subtitle}</p>
-                  <button className={`flex items-center gap-3 px-6 py-3 bg-white border ${theme.border} rounded-xl shadow-sm hover:shadow-md transition-all text-left group`}>
-                     <div className={`p-2 rounded-lg ${theme.accentLight} ${theme.accent}`}><UploadCloud size={20}/></div>
-                     <div>
-                        <div className={`font-bold text-sm ${theme.text}`}>{data.buttonLabel || 'Upload'}</div>
-                        <div className="text-[10px] text-stone-400">Click to open album</div>
-                     </div>
-                     <ArrowRight size={16} className={`ml-2 text-stone-300 group-hover:${theme.accent} transition-colors`}/>
-                  </button>
+                  {data.albumUrl && (
+                    <a 
+                      href={data.albumUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex items-center gap-3 px-6 py-3 bg-white border ${theme.border} rounded-xl shadow-sm hover:shadow-md transition-all text-left group`}
+                    >
+                       <div className={`p-2 rounded-lg ${theme.accentLight} ${theme.accent}`}><UploadCloud size={20}/></div>
+                       <div>
+                          <div className={`font-bold text-sm ${theme.text}`}>{viewAlbumLabel}</div>
+                          <div className="text-[10px] text-stone-400">{openInPhotosLabel}</div>
+                       </div>
+                       <ArrowRight size={16} className={`ml-2 text-stone-300 group-hover:${theme.accent} transition-colors`}/>
+                    </a>
+                  )}
                </div>
                <div className="relative h-64 md:h-auto">
                   <img src={data.image} className="w-full h-full object-cover" alt="Gallery"/>
                </div>
             </div>
+
+            {/* Guest Uploader */}
+            {hasAlbum && siteInfo && (
+              <div className="mb-12">
+                <GuestUploader
+                  albumId={data.albumId!}
+                  ownerClerkId={siteInfo.ownerClerkId!}
+                  siteId={siteInfo.siteId}
+                />
+              </div>
+            )}
+
+            {/* Gallery Grid */}
+            {hasAlbum && siteInfo && (
+              <GuestGallery
+                albumId={data.albumId!}
+                ownerClerkId={siteInfo.ownerClerkId!}
+              />
+            )}
+
+            {/* Placeholder when no album is set */}
+            {!data.albumId && !isPreview && (
+              <div className="text-center py-12 bg-stone-50 rounded-2xl">
+                <div className="w-16 h-16 mx-auto mb-4 bg-stone-100 rounded-full flex items-center justify-center">
+                  <Camera size={28} className="text-stone-400" />
+                </div>
+                <h3 className="font-bold text-stone-600 mb-1">{comingSoonTitle}</h3>
+                <p className="text-sm text-stone-400">{comingSoonSubtitle}</p>
+              </div>
+            )}
          </div>
       </section>
     );

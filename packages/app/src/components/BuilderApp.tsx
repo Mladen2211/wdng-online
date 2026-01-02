@@ -1,14 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Palette, Check, Layout, Camera, Star, Edit3, Image as ImageIcon, Type, Smartphone, Plus, Trash2, HelpCircle, Save, AlignLeft, Grid, GripVertical, Gift, Cake, Wine, Car, Plane, Home, Mail, Globe } from 'lucide-react';
+import { MapPin, Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Palette, Check, Layout, Camera, Star, Edit3, Image as ImageIcon, Type, Smartphone, Plus, Trash2, HelpCircle, Save, AlignLeft, Grid, GripVertical, Gift, Cake, Wine, Car, Plane, Home, Mail, Globe, QrCode, LayoutDashboard } from 'lucide-react';
 import { useMap } from 'react-leaflet';
 import dynamic from 'next/dynamic';
-import { useUser, SignInButton } from '@clerk/nextjs';
+import Image from 'next/image';
+import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import Link from 'next/link';
 import { WeddingData, Section } from '@/lib/types';
 import { THEMES, LAYOUTS, SECTION_TYPES, EVENT_ICONS } from '@/lib/constants';
 import WeddingPreview from './WeddingPreview';
-import AlbumSelector from './AlbumSelector';
+import AlbumManager from './AlbumManager';
+import AssetUploader from './AssetUploader';
+import QRCodeGenerator from './QRCodeGenerator';
+import { getTranslations, TranslationKeys } from '@/lib/i18n/translations';
+import { Locale, defaultLocale } from '@/lib/i18n/config';
+import { saveSite, getUserSite } from '@/actions/sites';
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -91,10 +98,16 @@ const INITIAL_DATA: WeddingData = {
 
 // --- MAIN APP ---
 
-const BuilderApp = () => {
+interface BuilderAppProps {
+  locale?: Locale;
+}
+
+const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
+  const t = getTranslations(locale);
   const { isSignedIn, user: clerkUser } = useUser();
   const [data, setData] = useState<WeddingData>(INITIAL_DATA);
   const [subdomain, setSubdomain] = useState('sara-mladen');
+  const [isSubdomainLocked, setIsSubdomainLocked] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -111,6 +124,7 @@ const BuilderApp = () => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [splitPosition, setSplitPosition] = useState(50); // percentage
   const [isDragging, setIsDragging] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -122,36 +136,19 @@ const BuilderApp = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Check authentication first (optional - don't fail if backend not available)
-        try {
-          const authResponse = await fetch('http://localhost:3001/me', {
-            credentials: 'include',
-          });
-
-          if (authResponse.ok) {
-            const userData = await authResponse.json();
-            setIsAuthenticated(true);
-            setUser(userData.user);
-          }
-        } catch (authError) {
-          // Backend not available - continue without authentication
-          console.log('Backend not available, running in demo mode');
-        }
-
-        // Try to load site data (optional)
-        try {
-          const response = await fetch('http://localhost:3001/me/site', {
-            credentials: 'include',
-          });
-          if (response.ok) {
-            const result = await response.json();
-            if (result.data) {
-              setData(result.data);
+        // Load site data using server action if user is signed in
+        if (isSignedIn) {
+          const result = await getUserSite();
+          if (result.success && result.data) {
+            setData(result.data);
+            if (result.subdomain) {
+              setSubdomain(result.subdomain);
+            }
+            // Lock subdomain if site has been saved before
+            if (result.isSubdomainLocked) {
+              setIsSubdomainLocked(true);
             }
           }
-        } catch (siteError) {
-          // Site data not available - use default data
-          console.log('Site data not available, using defaults');
         }
       } catch (error) {
         console.error('Failed to load data:', error);
@@ -161,15 +158,15 @@ const BuilderApp = () => {
     };
 
     loadData();
-  }, []);
+  }, [isSignedIn]);
 
   // -- State Updaters --
 
   const updateGlobal = (field: string, value: any) => {
     setData(prev => {
       const newGlobal = { ...prev.global, [field]: value };
-      // Auto-suggest subdomain when bride or groom changes (only if subdomain hasn't been manually edited much)
-      if ((field === 'bride' || field === 'groom') && subdomain === `${prev.global.bride.toLowerCase()}-${prev.global.groom.toLowerCase()}`) {
+      // Auto-suggest subdomain when bride or groom changes (only if subdomain hasn't been locked and hasn't been manually edited)
+      if (!isSubdomainLocked && (field === 'bride' || field === 'groom') && subdomain === `${prev.global.bride.toLowerCase()}-${prev.global.groom.toLowerCase()}`) {
         const newSubdomain = `${field === 'bride' ? value : newGlobal.bride}-${field === 'groom' ? value : newGlobal.groom}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
         setSubdomain(newSubdomain);
       }
@@ -216,25 +213,19 @@ const BuilderApp = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/me/site', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          data,
-          subdomain: subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '-')
-        }),
-      });
+      const cleanSubdomain = subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      const result = await saveSite(data, cleanSubdomain);
 
-      if (response.ok) {
-        alert(`Site saved! It will be available at ${subdomain}.wdng.online`);
+      if (result.success) {
+        // Lock subdomain after first successful save
+        setIsSubdomainLocked(true);
+        alert(t.builder.saveSuccess?.replace('{subdomain}', cleanSubdomain) || `Site saved! It will be available at ${cleanSubdomain}.wdng.online`);
       } else {
-        alert("Failed to save configuration");
+        alert(result.error || t.common.error || "Failed to save configuration");
       }
     } catch (error) {
-      alert("Error saving configuration");
+      console.error('Error saving site:', error);
+      alert(t.common.error || "Error saving configuration");
     }
   };
 
@@ -394,23 +385,45 @@ const BuilderApp = () => {
         style={{ width: `${splitPosition}%` }}
       >
         {/* Header */}
-        <div className="p-5 bg-white border-b border-stone-200 flex justify-between items-center sticky top-0 z-20">
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2"><Edit3 size={20} className="text-amber-600"/> Site Builder</h1>
-            {isSignedIn && clerkUser && <p className="text-sm text-stone-500">Welcome, {clerkUser.firstName || clerkUser.emailAddresses[0]?.emailAddress}</p>}
+        <div className="p-4 bg-white border-b border-stone-200 flex justify-between items-center sticky top-0 z-20">
+          <div className="flex items-center gap-4">
+            <Link href={`/${locale}`} className="flex items-center group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-rose-400 rounded-lg blur-sm opacity-40 group-hover:opacity-60 transition-opacity" />
+                <Image src="/logo.png" alt="wdng online" width={40} height={40} className="rounded-lg relative shadow-md group-hover:scale-105 transition-transform" />
+              </div>
+            </Link>
+            <div>
+              <h1 className="text-lg font-bold flex items-center gap-2"><Edit3 size={18} className="text-amber-600"/> {t.builder.title}</h1>
+              {isSignedIn && clerkUser && <p className="text-xs text-stone-500">{t.builder.welcome}, {clerkUser.firstName || clerkUser.emailAddresses[0]?.emailAddress}</p>}
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            {isSignedIn ? (
-              <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-amber-700 transition-colors shadow-lg">
-                <Save size={14} /> Save Site
-              </button>
-            ) : (
+            <button 
+              onClick={() => setShowQRCode(true)} 
+              className="flex items-center gap-2 p-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors"
+              title="Get QR Code"
+            >
+              <QrCode size={18} />
+            </button>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/">
+                <UserButton.MenuItems>
+                  <UserButton.Link
+                    label="Dashboard"
+                    labelIcon={<LayoutDashboard size={16} />}
+                    href={`/${locale}/dashboard`}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
+            </SignedIn>
+            <SignedOut>
               <SignInButton mode="modal">
-                <button className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-amber-700 transition-colors shadow-lg">
-                  <Save size={14} /> Sign in to Save
+                <button className="px-3 py-2 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors">
+                  {t.nav.signIn}
                 </button>
               </SignInButton>
-            )}
+            </SignedOut>
           </div>
         </div>
 
@@ -418,11 +431,11 @@ const BuilderApp = () => {
 
           {/* 1. Global Configuration */}
           <section className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 mb-6 flex items-center gap-2"><Layout size={16}/> Global Settings</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 mb-6 flex items-center gap-2"><Layout size={16}/> {t.builder.globalSettings}</h2>
 
             {/* Theme Selector */}
             <div className="mb-8">
-              <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">Theme</label>
+              <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.builder.theme}</label>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {Object.values(THEMES).map((theme) => (
                   <button
@@ -548,44 +561,52 @@ const BuilderApp = () => {
 
             <div className="space-y-4">
                {/* Subdomain Input */}
-               <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                 <label className="block text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1">
-                   <Globe size={12} /> Your Wedding Site URL
+               <div className={`p-4 rounded-xl border ${isSubdomainLocked ? 'bg-stone-100 border-stone-200' : 'bg-amber-50 border-amber-200'}`}>
+                 <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1 ${isSubdomainLocked ? 'text-stone-500' : 'text-amber-700'}`}>
+                   <Globe size={12} /> {t.builder.yourUrl}
+                   {isSubdomainLocked && <span className="ml-2 px-1.5 py-0.5 bg-stone-200 text-stone-600 rounded text-[8px]">{t.builder.urlLocked || 'LOCKED'}</span>}
                  </label>
                  <div className="flex items-center gap-2">
                    <input 
                      type="text" 
                      value={subdomain} 
-                     onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                     onChange={(e) => !isSubdomainLocked && setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
                      placeholder="sara-mladen"
-                     className="flex-1 px-3 py-2 rounded-lg border border-amber-300 text-sm font-medium text-stone-800 bg-white focus:ring-2 focus:ring-amber-500 outline-none"
+                     disabled={isSubdomainLocked}
+                     className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium outline-none ${
+                       isSubdomainLocked 
+                         ? 'border-stone-300 text-stone-500 bg-stone-50 cursor-not-allowed' 
+                         : 'border-amber-300 text-stone-800 bg-white focus:ring-2 focus:ring-amber-500'
+                     }`}
                    />
-                   <span className="text-sm text-amber-700 font-medium">.wdng.online</span>
+                   <span className={`text-sm font-medium ${isSubdomainLocked ? 'text-stone-500' : 'text-amber-700'}`}>.wdng.online</span>
                  </div>
-                 <p className="text-[10px] text-amber-600 mt-2">This will be your unique wedding website address</p>
+                 <p className={`text-[10px] mt-2 ${isSubdomainLocked ? 'text-stone-500' : 'text-amber-600'}`}>
+                   {isSubdomainLocked ? (t.builder.urlLockedHint || 'Your subdomain cannot be changed after the first save.') : t.builder.urlHint}
+                 </p>
                </div>
 
                <div className="grid grid-cols-2 gap-4">
-                 <InputField label="Bride" value={data.global.bride} onChange={(v) => updateGlobal('bride', v)} />
-                 <InputField label="Groom" value={data.global.groom} onChange={(v) => updateGlobal('groom', v)} />
+                 <InputField label={t.builder.bride} value={data.global.bride} onChange={(v) => updateGlobal('bride', v)} />
+                 <InputField label={t.builder.groom} value={data.global.groom} onChange={(v) => updateGlobal('groom', v)} />
                </div>
                <div className="grid grid-cols-2 gap-4">
-                 <InputField label="Date" value={data.global.dateFull} onChange={(v) => updateGlobal('dateFull', v)} />
-                 <InputField label="Time" value={data.global.dateTime} onChange={(v) => updateGlobal('dateTime', v)} />
+                 <InputField label={t.builder.date} value={data.global.dateFull} onChange={(v) => updateGlobal('dateFull', v)} />
+                 <InputField label={t.builder.time} value={data.global.dateTime} onChange={(v) => updateGlobal('dateTime', v)} />
                </div>
-               <InputField label="Location (City, Country)" value={data.global.locationCity} onChange={(v) => updateGlobal('locationCity', v)} />
+               <InputField label={t.builder.location} value={data.global.locationCity} onChange={(v) => updateGlobal('locationCity', v)} />
 
                <div className="pt-4 border-t border-stone-100">
-                 <ImageUpload label="Hero Background Image" currentImage={data.global.heroImage} onUpload={(url) => updateGlobal('heroImage', url)} />
+                 <ImageUpload label={t.builder.heroImage} currentImage={data.global.heroImage} onUpload={(url) => updateGlobal('heroImage', url)} />
                </div>
             </div>
           </section>
 
           {/* 2. Sections Manager */}
           <div className="flex items-center justify-between">
-             <h2 className="text-lg font-bold text-stone-800">Page Sections</h2>
+             <h2 className="text-lg font-bold text-stone-800">{t.builder.sections.title}</h2>
              <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-1 text-xs font-bold text-white bg-amber-600 px-3 py-1.5 rounded-full hover:bg-amber-700 shadow-lg shadow-amber-600/20 transform hover:-translate-y-0.5 transition-all">
-               <Plus size={14}/> Add Section
+               <Plus size={14}/> {t.builder.sections.add}
              </button>
           </div>
 
@@ -603,6 +624,7 @@ const BuilderApp = () => {
                 <SectionEditor
                   section={section}
                   index={index}
+                  translations={t}
                   onDelete={() => deleteSection(section.id)}
                   onUpdate={(newData) => updateSectionData(section.id, newData)}
                   onUpdateSection={(updatedSection) => updateSection(section.id, updatedSection)}
@@ -611,11 +633,29 @@ const BuilderApp = () => {
             ))}
             {data.sections.length === 0 && (
               <div className="p-8 border-2 border-dashed border-stone-200 rounded-2xl text-center text-stone-400 text-sm">
-                No sections added yet. Click "Add Section" to start building your page body.
+                {t.builder.sections.empty}
               </div>
             )}
           </div>
 
+        </div>
+
+        {/* Save Button - Fixed at bottom */}
+        <div className="p-4 bg-white border-t border-stone-200 sticky bottom-0">
+          {isSignedIn ? (
+            <button 
+              onClick={handleSave} 
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 text-white font-bold uppercase tracking-wider rounded-lg hover:bg-amber-700 transition-colors shadow-lg"
+            >
+              <Save size={18} /> {t.builder.save}
+            </button>
+          ) : (
+            <SignInButton mode="modal">
+              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 text-white font-bold uppercase tracking-wider rounded-lg hover:bg-amber-700 transition-colors shadow-lg">
+                <Save size={18} /> {t.builder.signInToSave}
+              </button>
+            </SignInButton>
+          )}
         </div>
       </div>
 
@@ -642,7 +682,7 @@ const BuilderApp = () => {
       >
         <div className="bg-stone-800 text-white text-[10px] py-1 text-center font-mono uppercase tracking-widest z-10">Live Preview</div>
         <div className="flex-1 overflow-y-auto relative scroll-smooth" id="preview-container">
-          <WeddingPreview data={data} />
+          <WeddingPreview data={data} isPreview={true} />
         </div>
       </div>
 
@@ -678,7 +718,7 @@ const BuilderApp = () => {
                     <div className="flex-1">
                       <div className="font-bold text-stone-800 text-sm">{info.label}</div>
                       <div className="text-xs text-stone-400">
-                        {isAlreadyAdded ? 'Already added to page' : 'Add to page body'}
+                        {isAlreadyAdded ? t.builder.sections.alreadyAdded : t.builder.sections.addToPage}
                       </div>
                     </div>
                     {isAlreadyAdded ? (
@@ -693,6 +733,15 @@ const BuilderApp = () => {
           </div>
         </div>
       )}
+
+      {/* QR CODE MODAL */}
+      {showQRCode && (
+        <QRCodeGenerator 
+          subdomain={subdomain} 
+          onClose={() => setShowQRCode(false)} 
+        />
+      )}
+
       {/* AUTH MODAL */}
       {showAuthModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -788,7 +837,7 @@ const BuilderApp = () => {
 
 // --- BUILDER SUB-COMPONENTS ---
 
-const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: { section: any; index: number; onDelete: () => void; onUpdate: (newData: any) => void; onUpdateSection: (updatedSection: any) => void }) => {
+const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, onUpdateSection }: { section: any; index: number; translations: TranslationKeys; onDelete: () => void; onUpdate: (newData: any) => void; onUpdateSection: (updatedSection: any) => void }) => {
   const typeInfo = SECTION_TYPES[section.type as keyof typeof SECTION_TYPES];
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -816,27 +865,23 @@ const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: 
       {isExpanded && (
         <div className="p-4 border-t border-stone-100 bg-stone-50/50 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="Section Name" value={section.name || ''} onChange={(v) => {
+            <InputField label={t.builder.sectionName} value={section.name || ''} onChange={(v) => {
               onUpdateSection({ ...section, name: v });
             }} />
-            <InputField label="Section Title" value={section.data.title} onChange={(v) => onUpdate({ title: v })} />
+            <InputField label={t.builder.sectionTitle} value={section.data.title} onChange={(v) => onUpdate({ title: v })} />
           </div>
-          {section.type !== 'faq' && <InputField label="Subtitle / Description" value={section.data.subtitle} onChange={(v) => onUpdate({ subtitle: v })} />}
+          {section.type !== 'faq' && <InputField label={t.builder.subtitle} value={section.data.subtitle} onChange={(v) => onUpdate({ subtitle: v })} />}
 
           {/* Type Specific Fields */}
           {section.type === 'photos' && (
             <div className="space-y-4">
-              <ImageUpload label="Background Photo" currentImage={section.data.image} onUpload={(url) => onUpdate({ ...section.data, image: url })} />
+              <ImageUpload label={t.builder.backgroundPhoto} currentImage={section.data.image} onUpload={(url) => onUpdate({ ...section.data, image: url })} />
               
               <div className="pt-4 border-t border-stone-200">
-                <label className="block text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Guest Photo Album</label>
-                <p className="text-xs text-stone-500 mb-3">
-                  Connect a Google Photos album where guests can upload their wedding photos.
-                </p>
-                <AlbumSelector
-                  selectedAlbumId={section.data.albumId}
-                  selectedAlbumTitle={section.data.albumTitle}
-                  onSelect={(albumId, albumTitle) => onUpdate({ ...section.data, albumId, albumTitle })}
+                <AlbumManager
+                  albumId={section.data.albumId}
+                  albumUrl={section.data.albumUrl}
+                  onAlbumCreated={(albumId, albumUrl) => onUpdate({ ...section.data, albumId, albumUrl })}
                 />
               </div>
             </div>
@@ -845,13 +890,13 @@ const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: 
           {section.type === 'events' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-stone-400 uppercase tracking-wider">Timeline Events</label>
+                <label className="block text-xs font-bold text-stone-400 uppercase tracking-wider">{t.builder.timelineEvents}</label>
                 <button onClick={() => {
                   const newItem = {
                     id: Date.now(),
-                    title: 'New Event',
+                    title: t.builder.newEvent || 'New Event',
                     time: '00:00',
-                    location: 'Location',
+                    location: t.builder.location,
                     description: '',
                     iconType: 'clock',
                     coordinates: { lat: 0, lng: 0 },
@@ -859,7 +904,7 @@ const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: 
                   };
                   onUpdate({ items: [...(section.data.items || []), newItem] });
                 }} className="text-xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1">
-                  <Plus size={12} /> Add Event
+                  <Plus size={12} /> {t.builder.addEvent}
                 </button>
               </div>
 
@@ -892,42 +937,42 @@ const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: 
 
           {section.type === 'faq' && (
             <div className="space-y-3 pt-2">
-               <label className="block text-xs font-bold text-stone-400 uppercase">Questions</label>
+               <label className="block text-xs font-bold text-stone-400 uppercase">{t.builder.questions}</label>
                {section.data.items?.map((item: any, idx: number) => (
                  <div key={idx} className="p-3 bg-white border border-stone-200 rounded-lg space-y-2 relative group">
                     <button onClick={() => {
                         const newItems = section.data.items.filter((_: any, i: number) => i !== idx);
                         onUpdate({ items: newItems });
                     }} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
-                    <InputField label="Question" value={item.q} onChange={(v) => {
+                    <InputField label={t.builder.question} value={item.q} onChange={(v) => {
                         const newItems = [...section.data.items]; newItems[idx].q = v; onUpdate({ items: newItems });
                     }} />
-                    <InputField label="Answer" value={item.a} onChange={(v) => {
+                    <InputField label={t.builder.answer} value={item.a} onChange={(v) => {
                         const newItems = [...section.data.items]; newItems[idx].a = v; onUpdate({ items: newItems });
                     }} />
                  </div>
                ))}
                <button onClick={() => {
-                  onUpdate({ items: [...(section.data.items || []), { q: 'New Question?', a: 'Answer here.' }] });
-               }} className="w-full py-2 border border-dashed border-stone-300 rounded-lg text-xs font-bold text-stone-500 hover:bg-stone-100">+ Add Question</button>
+                  onUpdate({ items: [...(section.data.items || []), { q: t.builder.newQuestion || 'New Question?', a: t.builder.answerPlaceholder || 'Answer here.' }] });
+               }} className="w-full py-2 border border-dashed border-stone-300 rounded-lg text-xs font-bold text-stone-500 hover:bg-stone-100">+ {t.builder.addQuestion}</button>
             </div>
           )}
 
           {section.type === 'rsvp' && (
             <div className="space-y-4 pt-2">
-               <InputField label="Response Deadline" value={section.data.deadline || ''} onChange={(v) => onUpdate({ ...section.data, deadline: v })} />
+               <InputField label={t.builder.responseDeadline} value={section.data.deadline || ''} onChange={(v) => onUpdate({ ...section.data, deadline: v })} />
                
                <div>
                  <div className="flex items-center justify-between mb-2">
-                   <label className="block text-xs font-bold text-stone-400 uppercase">Form Fields</label>
+                   <label className="block text-xs font-bold text-stone-400 uppercase">{t.builder.formFields}</label>
                    <button 
                      onClick={() => {
-                       const newField = { id: `field_${Date.now()}`, label: 'New Field', type: 'text', required: false };
+                       const newField = { id: `field_${Date.now()}`, label: t.builder.label, type: 'text', required: false };
                        onUpdate({ ...section.data, fields: [...(section.data.fields || []), newField] });
                      }}
                      className="text-xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
                    >
-                     <Plus size={12} /> Add Field
+                     <Plus size={12} /> {t.builder.addField}
                    </button>
                  </div>
                  
@@ -941,13 +986,13 @@ const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: 
                      </button>
                      
                      <div className="grid grid-cols-2 gap-2">
-                       <InputField label="Label" value={field.label} onChange={(v) => {
+                       <InputField label={t.builder.label} value={field.label} onChange={(v) => {
                          const newFields = [...section.data.fields];
                          newFields[idx].label = v;
                          onUpdate({ ...section.data, fields: newFields });
                        }} />
                        <div>
-                         <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Type</label>
+                         <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">{t.builder.type}</label>
                          <select
                            value={field.type}
                            onChange={(e) => {
@@ -957,10 +1002,10 @@ const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: 
                            }}
                            className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-800 bg-white outline-none focus:ring-2 focus:ring-amber-500"
                          >
-                           <option value="text">Text</option>
-                           <option value="email">Email</option>
-                           <option value="select">Dropdown</option>
-                           <option value="textarea">Text Area</option>
+                           <option value="text">{t.builder.fieldTypes.text}</option>
+                           <option value="email">{t.builder.fieldTypes.email}</option>
+                           <option value="select">{t.builder.fieldTypes.select}</option>
+                           <option value="textarea">{t.builder.fieldTypes.textarea}</option>
                          </select>
                        </div>
                      </div>
@@ -977,7 +1022,7 @@ const SectionEditor = ({ section, index, onDelete, onUpdate, onUpdateSection }: 
                            }}
                            className="rounded border-stone-300"
                          />
-                         <span className="text-stone-600">Required</span>
+                         <span className="text-stone-600">{t.builder.required}</span>
                        </label>
                      </div>
                      

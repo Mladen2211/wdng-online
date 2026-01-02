@@ -29,6 +29,12 @@ export interface WeddingGlobal {
   navLabels: string[];
   footerLinks: string[];
   copyright: string;
+  // Optional customizable labels for countdown and hero
+  daysLabel?: string;        // Default: "Days"
+  hoursLabel?: string;       // Default: "Hrs"  
+  minutesLabel?: string;     // Default: "Min"
+  secondsLabel?: string;     // Default: "Sec"
+  heroTagline?: string;      // Default: "The Wedding" (for vogue layout)
 }
 
 export interface WeddingData {
@@ -61,7 +67,15 @@ export interface PhotosData {
   buttonLabel?: string;
   image: string;
   albumId?: string;
-  albumTitle?: string;
+  albumUrl?: string;
+  // Optional labels for customization - if not set, default English will be used in preview
+  galleryLabel?: string;           // Default: "Gallery"
+  viewAlbumLabel?: string;         // Default: "View Album" 
+  openInPhotosLabel?: string;      // Default: "Open in Google Photos"
+  comingSoonTitle?: string;        // Default: "Photo Sharing Coming Soon"
+  comingSoonSubtitle?: string;     // Default: "The couple is setting up their photo album."
+  uploadTitle?: string;            // Default: "Share Your Photos"
+  uploadSubtitle?: string;         // Default: "Upload your photos from the wedding"
 }
 
 export interface FaqItem {

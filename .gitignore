@@ -56,4 +56,6 @@ Thumbs.db
 
 # temporary/notes files
 *.todo.md
-*-todos.md
+*todos.md
+# Local data storage
+data/

@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import WeddingPreview from '@/components/WeddingPreview';
+import WeddingPreview, { SiteInfo } from '@/components/WeddingPreview';
 import { LoadingSpinner } from '@/components/ui';
 import { WeddingData } from '@/lib/types';
+import { getSiteBySubdomain } from '@/actions/sites';
 
-// Mock data for demonstration - in production this would come from a database
+// Mock data for demonstration - fallback when no saved sites exist
 const MOCK_SITE_DATA: Record<string, WeddingData> = {
   'sara-mladen': {
     config: {
@@ -71,31 +72,38 @@ interface WeddingSiteProps {
 
 const WeddingSite: React.FC<WeddingSiteProps> = ({ siteId }) => {
   const [data, setData] = useState<WeddingData | null>(null);
+  const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch site data from API
+    // Fetch site data using server action
     const fetchSiteData = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/public/site?host=${siteId}`);
-        if (response.ok) {
-          const siteData = await response.json();
-          setData(siteData);
+        const result = await getSiteBySubdomain(siteId);
+        
+        if (result.success && result.data) {
+          setData(result.data);
+          setSiteInfo({
+            siteId,
+            ownerClerkId: result.ownerClerkId || undefined
+          });
         } else {
-          // Fallback to mock data if API fails
-          const siteData = MOCK_SITE_DATA[siteId];
-          if (siteData) {
-            setData(siteData);
+          // Fallback to mock data if no saved site exists
+          const mockSiteData = MOCK_SITE_DATA[siteId];
+          if (mockSiteData) {
+            setData(mockSiteData);
+            setSiteInfo({ siteId });
           } else {
             setError('Site not found');
           }
         }
       } catch (err) {
         // Fallback to mock data
-        const siteData = MOCK_SITE_DATA[siteId];
-        if (siteData) {
-          setData(siteData);
+        const mockSiteData = MOCK_SITE_DATA[siteId];
+        if (mockSiteData) {
+          setData(mockSiteData);
+          setSiteInfo({ siteId });
         } else {
           setError('Failed to load site');
         }
@@ -135,7 +143,7 @@ const WeddingSite: React.FC<WeddingSiteProps> = ({ siteId }) => {
     );
   }
 
-  return <WeddingPreview data={data} />;
+  return <WeddingPreview data={data} siteInfo={siteInfo || undefined} />;
 };
 
 export default WeddingSite;

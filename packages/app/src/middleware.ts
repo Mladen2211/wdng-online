@@ -1,5 +1,6 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { locales, defaultLocale } from '@/lib/i18n/config';
 
 export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl;
@@ -11,6 +12,30 @@ export default clerkMiddleware(async (auth, request) => {
   // If it's a subdomain (user wedding sites), rewrite to sites route
   if (subdomain && subdomain !== 'www' && subdomain !== 'localhost' && hostname.includes('.wdng.online')) {
     return NextResponse.rewrite(new URL(`/sites/${subdomain}${pathname}`, request.url));
+  }
+
+  // Skip i18n handling for API routes, static files, and site preview routes
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/sites') ||
+    pathname.includes('.') ||
+    pathname.startsWith('/sign-in') ||
+    pathname.startsWith('/sign-out')
+  ) {
+    return NextResponse.next();
+  }
+
+  // Check if path already has a valid locale
+  const pathnameLocale = locales.find(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
+
+  // If no locale in path, redirect to default locale
+  if (!pathnameLocale) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${defaultLocale}${pathname === '/' ? '' : pathname}`;
+    return NextResponse.redirect(url);
   }
 
   // If it's the root domain
