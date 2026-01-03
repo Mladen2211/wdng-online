@@ -49,10 +49,10 @@ export async function uploadAsset(formData: FormData): Promise<UploadResult> {
       return { success: false, error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.' };
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (max 20MB)
+    const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
-      return { success: false, error: 'File too large. Maximum size is 5MB.' };
+      return { success: false, error: 'File too large. Maximum size is 20MB.' };
     }
 
     ensureUploadsDir();

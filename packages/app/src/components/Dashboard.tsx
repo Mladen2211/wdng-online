@@ -5,9 +5,10 @@ import { useUser, SignInButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
-import { QrCode, Download, Copy, Check, X, Share2 } from 'lucide-react';
+import { QrCode, Download, Copy, Check, X, Share2, Trash2, User, Plus } from 'lucide-react';
 import { getUserSites, toggleSitePublished, deleteSiteAction } from '@/actions/dashboard';
 import { useTranslations, useLocale } from '@/lib/i18n/useTranslations';
+import { toast } from 'sonner';
 import type { Site } from '@wdng/db/src/db';
 import type { WeddingData } from '@/lib/types';
 
@@ -16,7 +17,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ locale: propLocale }: DashboardProps) {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
   const t = useTranslations();
   const hookLocale = useLocale();
   const locale = propLocale || hookLocale;
@@ -191,18 +192,50 @@ export default function Dashboard({ locale: propLocale }: DashboardProps) {
             </div>
           </Link>
           <nav className="flex items-center gap-4">
-            <Link 
-              href={`/${locale}/builder`}
-              className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors font-medium"
-            >
-              {t.dashboard.createNew}
-            </Link>
+            {/* User menu or other nav items could go here */}
           </nav>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Profile Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 mb-8">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              {user?.imageUrl ? (
+                <Image 
+                  src={user.imageUrl} 
+                  alt={user.fullName || 'Profile'} 
+                  width={64} 
+                  height={64} 
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center">
+                  <User className="w-8 h-8 text-stone-400" />
+                </div>
+              )}
+              <div>
+                <h2 className="text-xl font-serif text-stone-800">{user?.fullName}</h2>
+                <p className="text-stone-500">{user?.primaryEmailAddress?.emailAddress}</p>
+                <div className="mt-2 flex gap-2">
+                   <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full">
+                     User ID: {user?.id}
+                   </span>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => toast.error("Contact support to delete your account")}
+              className="text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Profile
+            </button>
+          </div>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-3xl font-serif text-gray-800">{t.dashboard.title}</h1>
           <p className="text-gray-600 mt-2">{t.dashboard.subtitle}</p>
@@ -226,6 +259,17 @@ export default function Dashboard({ locale: propLocale }: DashboardProps) {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Create New Site Card */}
+            <Link 
+              href={`/${locale}/builder`}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-[1.02] flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed border-rose-200 group cursor-pointer"
+            >
+              <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-rose-100 transition-colors">
+                <Plus className="w-8 h-8 text-rose-500" />
+              </div>
+              <h3 className="font-serif text-xl text-gray-800 font-medium">{t.dashboard.createNew}</h3>
+            </Link>
+
             {sites.map(site => {
               const data = getSiteData(site);
               const isLoading = actionLoading === site.id;

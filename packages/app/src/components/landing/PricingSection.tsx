@@ -12,7 +12,6 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
       {/* Price Badge */}
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-100 to-amber-100 rounded-full mb-8">
         <span className="text-2xl font-bold text-stone-900">{PRICE}</span>
-        <span className="text-stone-600">one-time</span>
       </div>
 
       <h2 className="font-serif text-5xl text-stone-900 mb-6">

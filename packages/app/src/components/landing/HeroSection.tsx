@@ -115,7 +115,7 @@ const MockupPreview: React.FC = () => (
     <div className="w-[80%] h-[90%] bg-white rounded-xl shadow-lg overflow-hidden relative">
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1519225468359-2996bc01c326?q=80&w=2000&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop"
           fill
           className="object-cover opacity-90"
           alt="Preview"
@@ -123,7 +123,7 @@ const MockupPreview: React.FC = () => (
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white">
-            <div className="text-4xl font-serif mb-2">Sara & Mladen</div>
+            <div className="text-4xl font-serif mb-2">Emma & Liam</div>
             <div className="text-xs uppercase tracking-widest bg-white/20 backdrop-blur-md py-1 px-3 rounded-full">
               May 10, 2026
             </div>

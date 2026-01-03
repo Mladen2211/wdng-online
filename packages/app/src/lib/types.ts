@@ -13,6 +13,7 @@ export interface WeddingConfig {
   selectedTheme: ThemeId;
   selectedLayout: LayoutId;
   targetDate: string;
+  siteLocale?: 'en' | 'de' | 'hr';
   googleAlbum?: GoogleAlbumConfig;
 }
 
@@ -26,6 +27,7 @@ export interface WeddingGlobal {
   locationCountry: string;
   heroTitle: string;
   heroImage: string;
+  heroImagePosition?: string; // e.g. 'center', 'top', 'bottom', 'left', 'right'
   navLabels: string[];
   footerLinks: string[];
   copyright: string;

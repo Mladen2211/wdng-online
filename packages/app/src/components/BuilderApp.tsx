@@ -1,38 +1,69 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Palette, Check, Layout, Camera, Star, Edit3, Image as ImageIcon, Type, Smartphone, Plus, Trash2, HelpCircle, Save, AlignLeft, Grid, GripVertical, Gift, Cake, Wine, Car, Plane, Home, Mail, Globe, QrCode, LayoutDashboard } from 'lucide-react';
-import { useMap } from 'react-leaflet';
-import dynamic from 'next/dynamic';
+import { MapPin, X, Check, Layout, Camera, Edit3, Smartphone, GripVertical, Mail, Globe, QrCode, LayoutDashboard, Plus, Trash2, Save, HelpCircle, AlignLeft } from 'lucide-react';
 import Image from 'next/image';
 import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { WeddingData, Section } from '@/lib/types';
 import { THEMES, LAYOUTS, SECTION_TYPES, EVENT_ICONS } from '@/lib/constants';
 import WeddingPreview from './WeddingPreview';
 import AlbumManager from './AlbumManager';
 import AssetUploader from './AssetUploader';
 import QRCodeGenerator from './QRCodeGenerator';
+import LocationSelectorDialog from './LocationSelectorDialog';
 import { getTranslations, TranslationKeys } from '@/lib/i18n/translations';
 import { Locale, defaultLocale } from '@/lib/i18n/config';
 import { saveSite, getUserSite } from '@/actions/sites';
 
-// Dynamically import map components to avoid SSR issues
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
+const SITE_TRANSLATIONS = {
+  en: {
+    daysLabel: 'Days', hoursLabel: 'Hrs', minutesLabel: 'Min', secondsLabel: 'Sec',
+    navLabels: ['Details', 'Info', 'Photos'],
+    footerLinks: ['Instagram', 'Email', 'Map'],
+    gallery: {
+      label: 'Gallery',
+      viewAlbum: 'View Album',
+      openInPhotos: 'Open in Google Photos',
+      comingSoonTitle: 'Photo Sharing Coming Soon',
+      comingSoonSubtitle: 'The couple is setting up their photo album.'
+    }
+  },
+  de: {
+    daysLabel: 'Tage', hoursLabel: 'Std', minutesLabel: 'Min', secondsLabel: 'Sek',
+    navLabels: ['Details', 'Info', 'Fotos'],
+    footerLinks: ['Instagram', 'Email', 'Karte'],
+    gallery: {
+      label: 'Galerie',
+      viewAlbum: 'Album ansehen',
+      openInPhotos: 'In Google Fotos öffnen',
+      comingSoonTitle: 'Foto-Sharing kommt bald',
+      comingSoonSubtitle: 'Das Paar richtet gerade ihr Fotoalbum ein.'
+    }
+  },
+  hr: {
+    daysLabel: 'Dana', hoursLabel: 'Sati', minutesLabel: 'Min', secondsLabel: 'Sek',
+    navLabels: ['Detalji', 'Info', 'Slike'],
+    footerLinks: ['Instagram', 'Email', 'Karta'],
+    gallery: {
+      label: 'Galerija',
+      viewAlbum: 'Pogledaj Album',
+      openInPhotos: 'Otvori u Google Photos',
+      comingSoonTitle: 'Dijeljenje slika uskoro',
+      comingSoonSubtitle: 'Mladenci trenutno postavljaju svoj album.'
+    }
+  }
+};
 
-// Fix for default markers in Leaflet
-if (typeof window !== 'undefined') {
-  const L = require('leaflet');
-  delete L.Icon.Default.prototype._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  });
-}
+const HERO_POSITIONS = [
+  { id: 'object-center', label: 'Center' },
+  { id: 'object-top', label: 'Top' },
+  { id: 'object-bottom', label: 'Bottom' },
+  { id: 'object-left', label: 'Left' },
+  { id: 'object-right', label: 'Right' },
+];
 
 // --- INITIAL DATA STRUCTURE ---
 
@@ -43,18 +74,18 @@ const INITIAL_DATA: WeddingData = {
     targetDate: 'May 10, 2026 16:00:00',
   },
   global: {
-    bride: 'Sara',
-    groom: 'Mladen',
-    initials: 'S & M',
+    bride: 'Emma',
+    groom: 'Liam',
+    initials: 'E & L',
     dateFull: '10. Svibnja 2026.',
     dateTime: '16:00',
     locationCity: 'Zagreb',
     locationCountry: 'Croatia',
     heroTitle: 'Rezervirajte Datum',
-    heroImage: 'https://images.unsplash.com/photo-1519225468359-2996bc01c326?q=80&w=2000&auto=format&fit=crop',
+    heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop',
     navLabels: ['Detalji', 'Info', 'Slike'],
     footerLinks: ['Instagram', 'Email', 'Karta'],
-    copyright: '© 2026 Sara & Mladen • Zagreb'
+    copyright: '© 2026 Emma & Liam • Zagreb'
   },
   sections: [
     {
@@ -78,7 +109,7 @@ const INITIAL_DATA: WeddingData = {
         title: 'Vaše fotografije, <br/>naša sjećanja.',
         subtitle: 'Pomozite nam prikupiti sve trenutke s vjenčanja.',
         buttonLabel: 'Google Photos Album',
-        image: 'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?q=80&w=2000&auto=format&fit=crop'
+        image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=2000&auto=format&fit=crop'
       }
     },
     {
@@ -104,15 +135,17 @@ interface BuilderAppProps {
 
 const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
   const t = getTranslations(locale);
+  const router = useRouter();
   const { isSignedIn, user: clerkUser } = useUser();
   const [data, setData] = useState<WeddingData>(INITIAL_DATA);
-  const [subdomain, setSubdomain] = useState('sara-mladen');
+  const [subdomain, setSubdomain] = useState('emma-liam');
   const [isSubdomainLocked, setIsSubdomainLocked] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [_loading, setLoading] = useState(true);
+  const [_isAuthenticated, setIsAuthenticated] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [_user, setUser] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [authEmail, setAuthEmail] = useState('');
@@ -162,7 +195,7 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
 
   // -- State Updaters --
 
-  const updateGlobal = (field: string, value: any) => {
+  const updateGlobal = (field: string, value: string | string[]) => {
     setData(prev => {
       const newGlobal = { ...prev.global, [field]: value };
       // Auto-suggest subdomain when bride or groom changes (only if subdomain hasn't been locked and hasn't been manually edited)
@@ -174,7 +207,7 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
     });
   };
 
-  const updateConfig = (field: string, value: any) => {
+  const updateConfig = (field: string, value: string) => {
     setData(prev => ({ ...prev, config: { ...prev.config, [field]: value } }));
   };
 
@@ -199,10 +232,43 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
     }));
   };
 
-  const updateSectionData = (id: string, newData: any) => {
+  const updateSectionData = (id: string, newData: Section['data']) => {
     setData(prev => ({
       ...prev,
       sections: prev.sections.map(s => s.id === id ? { ...s, data: newData } : s)
+    }));
+  };
+
+  const handleSiteLocaleChange = (locale: 'en' | 'de' | 'hr') => {
+    const translations = SITE_TRANSLATIONS[locale];
+    setData(prev => ({
+      ...prev,
+      config: { ...prev.config, siteLocale: locale },
+      global: {
+        ...prev.global,
+        daysLabel: translations.daysLabel,
+        hoursLabel: translations.hoursLabel,
+        minutesLabel: translations.minutesLabel,
+        secondsLabel: translations.secondsLabel,
+        navLabels: translations.navLabels,
+        footerLinks: translations.footerLinks
+      },
+      sections: prev.sections.map(section => {
+        if (section.type === 'photos') {
+          return {
+            ...section,
+            data: {
+              ...section.data,
+              galleryLabel: translations.gallery.label,
+              viewAlbumLabel: translations.gallery.viewAlbum,
+              openInPhotosLabel: translations.gallery.openInPhotos,
+              comingSoonTitle: translations.gallery.comingSoonTitle,
+              comingSoonSubtitle: translations.gallery.comingSoonSubtitle
+            }
+          };
+        }
+        return section;
+      })
     }));
   };
 
@@ -219,13 +285,14 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
       if (result.success) {
         // Lock subdomain after first successful save
         setIsSubdomainLocked(true);
-        alert(t.builder.saveSuccess?.replace('{subdomain}', cleanSubdomain) || `Site saved! It will be available at ${cleanSubdomain}.wdng.online`);
+        toast.success(t.builder.saveSuccess?.replace('{subdomain}', cleanSubdomain) || `Site saved! It will be available at ${cleanSubdomain}.wdng.online`);
+        router.push('/dashboard');
       } else {
-        alert(result.error || t.common.error || "Failed to save configuration");
+        toast.error(result.error || t.common.error || "Failed to save configuration");
       }
     } catch (error) {
       console.error('Error saving site:', error);
-      alert(t.common.error || "Error saving configuration");
+      toast.error(t.common.error || "Error saving configuration");
     }
   };
 
@@ -271,14 +338,15 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
       } else {
         setAuthError(data.error || 'Authentication failed');
       }
-    } catch (err) {
+    } catch (_err) {
       setAuthError('Network error. Please try again.');
     } finally {
       setAuthLoading(false);
     }
   };
 
-  const handleLogout = async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleLogout = async () => {
     try {
       await fetch('http://localhost:3001/auth/logout', {
         method: 'POST',
@@ -571,33 +639,70 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
                      type="text" 
                      value={subdomain} 
                      onChange={(e) => !isSubdomainLocked && setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                     placeholder="sara-mladen"
+                     placeholder="emma-liam"
                      disabled={isSubdomainLocked}
-                     className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium outline-none ${
-                       isSubdomainLocked 
-                         ? 'border-stone-300 text-stone-500 bg-stone-50 cursor-not-allowed' 
-                         : 'border-amber-300 text-stone-800 bg-white focus:ring-2 focus:ring-amber-500'
-                     }`}
+                     className={`flex-1 px-3 py-2 rounded-lg border ${isSubdomainLocked ? 'bg-stone-100 border-stone-200 text-stone-500' : 'bg-white border-stone-200 focus:ring-2 focus:ring-stone-800 focus:border-transparent'} outline-none transition-all font-mono text-sm`}
                    />
-                   <span className={`text-sm font-medium ${isSubdomainLocked ? 'text-stone-500' : 'text-amber-700'}`}>.wdng.online</span>
+                   <span className="text-stone-400 font-mono text-sm">.wdng.online</span>
                  </div>
-                 <p className={`text-[10px] mt-2 ${isSubdomainLocked ? 'text-stone-500' : 'text-amber-600'}`}>
-                   {isSubdomainLocked ? (t.builder.urlLockedHint || 'Your subdomain cannot be changed after the first save.') : t.builder.urlHint}
-                 </p>
+               </div>
+
+               <div>
+                  <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2">Site Language</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'en', label: 'English', flag: '🇬🇧' },
+                      { id: 'de', label: 'German', flag: '🇩🇪' },
+                      { id: 'hr', label: 'Croatian', flag: '🇭🇷' }
+                    ].map((lang) => (
+                      <button
+                        key={lang.id}
+                        onClick={() => handleSiteLocaleChange(lang.id as 'en' | 'de' | 'hr')}
+                        className={`relative p-3 rounded-xl border-2 transition-all duration-200 group cursor-pointer flex flex-col items-center gap-2 ${
+                          (data.config.siteLocale || 'en') === lang.id
+                            ? 'border-stone-800 bg-stone-50'
+                            : 'border-stone-200 hover:border-stone-300 bg-white'
+                        }`}
+                      >
+                        <span className="text-2xl">{lang.flag}</span>
+                        <span className={`text-xs font-bold ${
+                          (data.config.siteLocale || 'en') === lang.id ? 'text-stone-800' : 'text-stone-500'
+                        }`}>{lang.label}</span>
+                        
+                        {(data.config.siteLocale || 'en') === lang.id && (
+                          <div className="absolute top-2 right-2 w-4 h-4 bg-stone-800 rounded-full flex items-center justify-center">
+                            <Check size={10} className="text-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                </div>
 
                <div className="grid grid-cols-2 gap-4">
                  <InputField label={t.builder.bride} value={data.global.bride} onChange={(v) => updateGlobal('bride', v)} />
                  <InputField label={t.builder.groom} value={data.global.groom} onChange={(v) => updateGlobal('groom', v)} />
                </div>
+
                <div className="grid grid-cols-2 gap-4">
                  <InputField label={t.builder.date} value={data.global.dateFull} onChange={(v) => updateGlobal('dateFull', v)} />
                  <InputField label={t.builder.time} value={data.global.dateTime} onChange={(v) => updateGlobal('dateTime', v)} />
                </div>
                <InputField label={t.builder.location} value={data.global.locationCity} onChange={(v) => updateGlobal('locationCity', v)} />
 
-               <div className="pt-4 border-t border-stone-100">
-                 <ImageUpload label={t.builder.heroImage} currentImage={data.global.heroImage} onUpload={(url) => updateGlobal('heroImage', url)} />
+               <div className="pt-4 border-t border-stone-100 space-y-4">
+                 <AssetUploader 
+                   label={t.builder.heroImage} 
+                   value={data.global.heroImage} 
+                   onChange={(url) => updateGlobal('heroImage', url)} 
+                   aspectRatio="landscape"
+                 />
+                 <SelectField 
+                    label="Image Position" 
+                    value={data.global.heroImagePosition || 'object-center'} 
+                    options={HERO_POSITIONS} 
+                    onChange={(v) => updateGlobal('heroImagePosition', v)} 
+                 />
                </div>
             </div>
           </section>
@@ -837,6 +942,7 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
 
 // --- BUILDER SUB-COMPONENTS ---
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, onUpdateSection }: { section: any; index: number; translations: TranslationKeys; onDelete: () => void; onUpdate: (newData: any) => void; onUpdateSection: (updatedSection: any) => void }) => {
   const typeInfo = SECTION_TYPES[section.type as keyof typeof SECTION_TYPES];
   const [isExpanded, setIsExpanded] = useState(false);
@@ -875,7 +981,12 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
           {/* Type Specific Fields */}
           {section.type === 'photos' && (
             <div className="space-y-4">
-              <ImageUpload label={t.builder.backgroundPhoto} currentImage={section.data.image} onUpload={(url) => onUpdate({ ...section.data, image: url })} />
+              <AssetUploader 
+                label={t.builder.backgroundPhoto} 
+                value={section.data.image} 
+                onChange={(url) => onUpdate({ ...section.data, image: url })} 
+                aspectRatio="landscape"
+              />
               
               <div className="pt-4 border-t border-stone-200">
                 <AlbumManager
@@ -909,6 +1020,7 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
               </div>
 
               <div className="space-y-3">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {section.data.items?.map((item: any, idx: number) => (
                   <EventItemEditor
                     key={item.id}
@@ -920,6 +1032,7 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                       onUpdate({ items: newItems });
                     }}
                     onDelete={() => {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const newItems = section.data.items.filter((i: any) => i.id !== item.id);
                       onUpdate({ items: newItems });
                     }}
@@ -938,9 +1051,11 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
           {section.type === 'faq' && (
             <div className="space-y-3 pt-2">
                <label className="block text-xs font-bold text-stone-400 uppercase">{t.builder.questions}</label>
+               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                {section.data.items?.map((item: any, idx: number) => (
                  <div key={idx} className="p-3 bg-white border border-stone-200 rounded-lg space-y-2 relative group">
                     <button onClick={() => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const newItems = section.data.items.filter((_: any, i: number) => i !== idx);
                         onUpdate({ items: newItems });
                     }} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
@@ -976,9 +1091,11 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                    </button>
                  </div>
                  
+                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                  {section.data.fields?.map((field: any, idx: number) => (
                    <div key={field.id} className="p-3 bg-white border border-stone-200 rounded-lg space-y-2 relative group mb-2">
                      <button onClick={() => {
+                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                        const newFields = section.data.fields.filter((f: any) => f.id !== field.id);
                        onUpdate({ ...section.data, fields: newFields });
                      }} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600">
@@ -1053,264 +1170,11 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
   );
 };
 
-// --- MAP CLICK HANDLER COMPONENT ---
 
-const MapClickHandler = dynamic(() => import('./MapClickHandler'), { ssr: false });
-
-// --- LOCATION SELECTOR DIALOG ---
-
-// --- LOCATION SELECTOR DIALOG ---
-
-const LocationSelectorDialog = ({
-  currentLocation,
-  currentCoordinates,
-  onSelect,
-  onClose
-}: {
-  currentLocation: string;
-  currentCoordinates: { lat: number; lng: number } | undefined;
-  onSelect: (location: string, coordinates: { lat: number; lng: number }) => void;
-  onClose: () => void;
-}) => {
-  const [searchQuery, setSearchQuery] = useState(currentLocation);
-  const [selectedCoordinates, setSelectedCoordinates] = useState(currentCoordinates || { lat: 45.8150, lng: 15.9775 });
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
-
-  // Component to handle map centering
-  const MapCenterHandler = ({ coordinates }: { coordinates: { lat: number; lng: number } }) => {
-    const map = useMap();
-    
-    useEffect(() => {
-      if (coordinates && map) {
-        map.setView([coordinates.lat, coordinates.lng], 15);
-      }
-    }, [coordinates, map]);
-    
-    return null;
-  };
-
-  // Search using OpenStreetMap Nominatim API with suggestions
-  const handleSearch = async (query?: string) => {
-    const searchTerm = query || searchQuery;
-    if (!searchTerm.trim() || searchTerm.trim().length < 2) {
-      setSearchSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    setIsSearching(true);
-
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=5&addressdetails=1`
-      );
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        setSearchSuggestions(data);
-        setShowSuggestions(true);
-      } else {
-        setSearchSuggestions([]);
-        setShowSuggestions(false);
-      }
-    } catch (error) {
-      console.error('Error searching location:', error);
-      setSearchSuggestions([]);
-      setShowSuggestions(false);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Debounced search function
-  const debouncedSearch = (query: string) => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-    const timeout = setTimeout(() => {
-      handleSearch(query);
-    }, 200); // 200ms delay - faster response
-    setSearchTimeout(timeout);
-  };
-
-  const handleSuggestionSelect = (suggestion: any) => {
-    const newCoords = {
-      lat: parseFloat(suggestion.lat),
-      lng: parseFloat(suggestion.lon)
-    };
-    setSelectedCoordinates(newCoords);
-    // Don't set searchQuery - let user type custom name
-    setShowSuggestions(false);
-
-    // Map will be centered automatically by the useEffect when coordinates change
-  };
-
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setSelectedCoordinates({ lat, lng });
-    setShowSuggestions(false);
-  };
-
-  const handleMarkerDragEnd = (event: any) => {
-    const marker = event.target;
-    const position = marker.getLatLng();
-    setSelectedCoordinates({ lat: position.lat, lng: position.lng });
-  };
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-    };
-  }, [searchTimeout]);
-
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up">
-        {/* Header */}
-        <div className="p-4 border-b border-stone-100 flex justify-between items-center">
-          <h3 className="font-bold text-stone-800">Select Location</h3>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-800">
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Search Suggestions Dropdown - positioned at top of modal */}
-        {showSuggestions && searchSuggestions.length > 0 && (
-          <div className="mx-4 mt-2 bg-white border border-stone-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {searchSuggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                onMouseDown={(e) => {
-                  e.preventDefault(); // Prevent blur from firing
-                  handleSuggestionSelect(suggestion);
-                }}
-                className="w-full text-left px-3 py-2 hover:bg-stone-50 border-b border-stone-100 last:border-b-0 focus:bg-stone-50 focus:outline-none transition-colors"
-              >
-                <div className="text-sm font-medium text-stone-800 truncate">
-                  {suggestion.display_name}
-                </div>
-                <div className="text-xs text-stone-500">
-                  {suggestion.type && `${suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1)}`}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Search */}
-        <div className="relative p-4 border-b border-stone-100">
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  debouncedSearch(e.target.value);
-                }}
-                placeholder="Type a custom name for this location..."
-                className={`w-full px-3 py-2 rounded-lg border text-sm font-medium text-stone-800 bg-white outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
-                  selectedCoordinates ? 'border-green-500 bg-green-50' : 'border-stone-200'
-                }`}
-              />
-              {selectedCoordinates && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
-                  <Check size={16} />
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => handleSearch()}
-              disabled={isSearching}
-              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors whitespace-nowrap"
-            >
-              {isSearching ? 'Searching...' : 'Search'}
-            </button>
-          </div>
-        </div>
-
-        {/* Map Area */}
-        <div className="relative h-96 bg-stone-100">
-          <MapContainer
-            center={[45.8150, 15.9775]} // Fixed initial center
-            zoom={13}
-            style={{ height: '100%', width: '100%' }}
-            whenReady={() => {
-              // Map is ready, but we can't set it here directly
-              // We'll use useMap hook in a child component instead
-            }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <MapClickHandler onLocationSelect={handleLocationSelect} />
-            <MapCenterHandler coordinates={selectedCoordinates} />
-            <Marker
-              position={[selectedCoordinates.lat, selectedCoordinates.lng]}
-              draggable={true}
-              eventHandlers={{
-                dragend: (event: any) => {
-                  const marker = event.target;
-                  const position = marker.getLatLng();
-                  setSelectedCoordinates({ lat: position.lat, lng: position.lng });
-                },
-              }}
-            >
-              <Popup>
-                Selected Location<br />
-                {selectedCoordinates.lat.toFixed(6)}, {selectedCoordinates.lng.toFixed(6)}
-              </Popup>
-            </Marker>
-          </MapContainer>
-
-          {/* Coordinates display */}
-          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
-            <div className="text-xs font-mono text-stone-600">
-              {selectedCoordinates.lat.toFixed(6)}, {selectedCoordinates.lng.toFixed(6)}
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
-            <div className="text-xs text-stone-600">
-              Click on the map or drag the marker to select location
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-stone-100 flex justify-between items-center">
-          <div className="text-sm text-stone-600">
-            Selected: <span className="font-medium">{searchQuery || 'Custom Location'}</span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-stone-600 hover:text-stone-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => onSelect(searchQuery, selectedCoordinates)}
-              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-            >
-              Select Location
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // --- EVENT ITEM EDITOR ---
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const EventItemEditor = ({ item, index, onUpdate, onDelete, onMove }: {
   item: any;
   index: number;
@@ -1318,6 +1182,7 @@ const EventItemEditor = ({ item, index, onUpdate, onDelete, onMove }: {
   onDelete: () => void;
   onMove: (fromIndex: number, toIndex: number) => void;
 }) => {
+/* eslint-enable @typescript-eslint/no-explicit-any */
   const [isDragging, setIsDragging] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
@@ -1516,10 +1381,12 @@ const InputField = ({ label, value, onChange }: { label: string; value: string; 
   </div>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SelectField = ({ label, value, options, onChange }: { label: string; value: string; options: any; onChange: (value: string) => void }) => (
   <div>
     <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">{label}</label>
     <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-800 bg-white outline-none">
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {Object.values(options).map((opt: any) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
     </select>
   </div>
@@ -1548,6 +1415,7 @@ const MobileWarning = () => (
 );
 
 // Helper function to get icon components
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const getIconComponent = (iconName: string) => {
   const icons: Record<string, React.ComponentType<any>> = {
     MapPin, Camera, HelpCircle, AlignLeft, Mail
@@ -1555,5 +1423,6 @@ const getIconComponent = (iconName: string) => {
   const IconComponent = icons[iconName] || MapPin;
   return <IconComponent size={16} />;
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export default BuilderApp;

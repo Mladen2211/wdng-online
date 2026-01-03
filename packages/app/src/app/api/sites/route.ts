@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { WeddingData } from '@/lib/types';
 
 // In-memory storage for demo purposes - in production use a database
-let siteStorage: Record<string, WeddingData> = {};
+const siteStorage: Record<string, WeddingData> = {};
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     siteStorage[siteId] = data;
 
     return NextResponse.json({ success: true, message: 'Site saved successfully' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 }

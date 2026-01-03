@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Palette, Check, Layout, Camera, Star, Edit3, Image as ImageIcon, Type, Smartphone, Plus, Trash2, HelpCircle, Save, AlignLeft, Grid } from 'lucide-react';
+import { Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Camera, Star } from 'lucide-react';
 import { WeddingData } from '@/lib/types';
 import { THEMES } from '@/lib/constants';
 import GuestUploader from './GuestUploader';
@@ -157,8 +157,11 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
 
 interface HeroRendererProps {
   layout: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   theme: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   global: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   timeLeft: any;
 }
 
@@ -169,6 +172,7 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
   const minutesLabel = global.minutesLabel || 'Min';
   const secondsLabel = global.secondsLabel || 'Sec';
   const heroTagline = global.heroTagline || 'The Wedding';
+  const imagePosition = global.heroImagePosition || 'object-center';
 
   if (layout === 'vogue') {
     return (
@@ -178,7 +182,13 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
             <div className="text-right hidden md:block"><p className="text-xs uppercase tracking-widest text-stone-400">{global.locationCity}</p><p className="text-xs uppercase tracking-widest text-stone-400">{global.dateFull}</p></div>
          </div>
          <div className="relative w-full h-[50vh] overflow-hidden mb-6 group">
-            <img src={global.heroImage} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000" alt="Hero" />
+            {global.heroImage ? (
+              <img src={global.heroImage} className={`w-full h-full object-cover ${imagePosition} grayscale group-hover:grayscale-0 transition-all duration-1000`} alt="Hero" />
+            ) : (
+              <div className="w-full h-full bg-stone-200 flex items-center justify-center">
+                <span className="text-stone-400">No image selected</span>
+              </div>
+            )}
             <div className="absolute bottom-0 left-0 bg-white px-4 py-2"><p className={`font-serif text-xl ${theme.text} italic`}>{heroTagline}</p></div>
          </div>
          <div className="border-t border-stone-300 pt-6 flex justify-between items-start">
@@ -197,9 +207,11 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
       <header className="py-20 px-6 flex flex-col items-center bg-white text-center">
          <div className={`inline-block px-3 py-1 rounded-full border ${theme.border} text-[10px] font-bold uppercase tracking-widest mb-6 text-stone-400`}>{global.dateFull} • {global.locationCity}</div>
          <h1 className={`font-serif text-6xl md:text-8xl ${theme.text} mb-8 leading-none`}>{global.bride} <br/><span className={`${theme.accent} italic`}>&</span> {global.groom}</h1>
-         <div className="relative w-full max-w-lg aspect-[3/4] rounded-t-[10rem] rounded-b-[2rem] overflow-hidden shadow-2xl mb-10 mx-auto border-4 border-white">
-            <img src={global.heroImage} className="w-full h-full object-cover" alt="Hero" />
-            <div className="absolute -bottom-5 -left-5 bg-white p-4 rounded-full shadow-lg"><Heart className={theme.accent} fill="currentColor" size={24}/></div>
+         <div className="relative w-full max-w-lg mx-auto mb-10">
+            <div className="aspect-[3/4] rounded-t-[10rem] rounded-b-[2rem] overflow-hidden shadow-2xl border-4 border-white">
+              <img src={global.heroImage} className={`w-full h-full object-cover ${imagePosition}`} alt="Hero" />
+            </div>
+            <div className="absolute -bottom-5 -left-5 bg-white p-4 rounded-full shadow-lg z-10"><Heart className={theme.accent} fill="currentColor" size={24}/></div>
          </div>
          <div className="flex gap-6 justify-center">
             <CountdownSimple val={timeLeft.days} label={daysLabel} theme={theme} />
@@ -214,7 +226,7 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
   return (
     <header className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-stone-900">
       <div className="absolute inset-0 z-0">
-        <img src={global.heroImage} className="w-full h-full object-cover opacity-60" alt="Hero" />
+        <img src={global.heroImage} className={`w-full h-full object-cover ${imagePosition} opacity-60`} alt="Hero" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60"></div>
       </div>
       <div className="relative z-10 text-center px-4 w-full max-w-4xl animate-fade-in-up">
@@ -237,7 +249,9 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
 };
 
 interface SectionRendererProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   section: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   theme: any;
   layout: string;
   sectionIndex: number;
@@ -258,6 +272,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
              {data.subtitle && <p className={`${theme.textMuted}`}>{data.subtitle}</p>}
           </div>
           <div className={`${layout === 'vogue' ? 'grid grid-cols-1 border-t border-l border-stone-200' : 'space-y-6'}`}>
+             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
              {data.items?.map((item: any, idx: number) => (
                 layout === 'vogue' ? (
                   <div key={idx} className="border-r border-b border-stone-200 p-8 hover:bg-stone-50 transition-colors">
@@ -323,7 +338,13 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                   )}
                </div>
                <div className="relative h-64 md:h-auto">
-                  <img src={data.image} className="w-full h-full object-cover" alt="Gallery"/>
+                  {data.image ? (
+                    <img src={data.image} className="w-full h-full object-cover" alt="Gallery"/>
+                  ) : (
+                    <div className="w-full h-full bg-stone-200 flex items-center justify-center">
+                      <span className="text-stone-400">No image</span>
+                    </div>
+                  )}
                </div>
             </div>
 
@@ -368,6 +389,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
             <div className="text-center mb-10">
                <h2 className={`font-serif text-3xl ${theme.text}`}>{data.title}</h2>
             </div>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {data.items?.map((item: any, idx: number) => (
                <div key={idx} className={`bg-white p-6 rounded-xl border ${theme.border} shadow-sm`}>
                   <h3 className={`font-serif text-lg ${theme.text} mb-2`}>{item.q}</h3>
@@ -408,6 +430,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
           </div>
           
           <form className={`bg-white p-8 rounded-2xl shadow-lg border ${theme.border}`}>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {data.fields?.map((field: any, idx: number) => (
               <div key={idx} className="mb-6 last:mb-0">
                 <label className={`block text-sm font-medium ${theme.text} mb-2`}>
@@ -457,6 +480,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
 interface CountdownSimpleProps {
   val: number;
   label: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   theme: any;
 }
 

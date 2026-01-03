@@ -55,7 +55,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
             <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-amber-500 rounded-2xl blur-3xl opacity-20" />
             <div className="relative aspect-[4/3] rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
               <Image
-                src="https://images.unsplash.com/photo-1511285560982-1351cdeb9821?q=80&w=2000&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=2000&auto=format&fit=crop"
                 alt="Process"
                 fill
                 className="object-cover"

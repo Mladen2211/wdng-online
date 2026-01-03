@@ -236,7 +236,7 @@ export default function AlbumManager({ albumId, albumUrl, onAlbumCreated }: Albu
             type="text"
             value={albumName}
             onChange={(e) => setAlbumName(e.target.value)}
-            placeholder="e.g., Sara & Mladen's Wedding"
+            placeholder="e.g., Emma & Liam's Wedding"
             className="w-full px-4 py-3 rounded-xl border border-amber-300 text-stone-800 bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
           />
         </div>

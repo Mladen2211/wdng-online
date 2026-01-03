@@ -5,28 +5,29 @@ import WeddingPreview, { SiteInfo } from '@/components/WeddingPreview';
 import { LoadingSpinner } from '@/components/ui';
 import { WeddingData } from '@/lib/types';
 import { getSiteBySubdomain } from '@/actions/sites';
+import Link from 'next/link';
 
 // Mock data for demonstration - fallback when no saved sites exist
 const MOCK_SITE_DATA: Record<string, WeddingData> = {
-  'sara-mladen': {
+  'emma-liam': {
     config: {
       selectedTheme: 'gold',
       selectedLayout: 'immersive',
       targetDate: 'May 10, 2026 16:00:00',
     },
     global: {
-      bride: 'Sara',
-      groom: 'Mladen',
-      initials: 'S & M',
+      bride: 'Emma',
+      groom: 'Liam',
+      initials: 'E & L',
       dateFull: '10. Svibnja 2026.',
       dateTime: '16:00',
       locationCity: 'Zagreb',
       locationCountry: 'Croatia',
       heroTitle: 'Rezervirajte Datum',
-      heroImage: 'https://images.unsplash.com/photo-1519225468359-2996bc01c326?q=80&w=2000&auto=format&fit=crop',
+      heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop',
       navLabels: ['Detalji', 'Info', 'Slike'],
       footerLinks: ['Instagram', 'Email', 'Karta'],
-      copyright: '© 2026 Sara & Mladen • Zagreb'
+      copyright: '© 2026 Emma & Liam • Zagreb'
     },
     sections: [
       {
@@ -98,7 +99,7 @@ const WeddingSite: React.FC<WeddingSiteProps> = ({ siteId }) => {
             setError('Site not found');
           }
         }
-      } catch (err) {
+      } catch {
         // Fallback to mock data
         const mockSiteData = MOCK_SITE_DATA[siteId];
         if (mockSiteData) {
@@ -131,13 +132,13 @@ const WeddingSite: React.FC<WeddingSiteProps> = ({ siteId }) => {
             <span className="text-3xl">💔</span>
           </div>
           <h1 className="text-2xl font-serif text-stone-800 mb-4">Site Not Found</h1>
-          <p className="text-stone-600 mb-6">The wedding website you're looking for doesn't exist or has been removed.</p>
-          <a 
+          <p className="text-stone-600 mb-6">The wedding website you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+          <Link 
             href="/" 
             className="inline-block px-6 py-3 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors"
           >
             Return Home
-          </a>
+          </Link>
         </div>
       </div>
     );

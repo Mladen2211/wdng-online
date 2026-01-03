@@ -14,7 +14,7 @@ interface ThemeConfig {
 const THEMES: readonly ThemeConfig[] = [
   {
     key: 'vogue',
-    image: 'https://images.unsplash.com/photo-1519225468359-2996bc01c326?q=80&w=600&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?q=80&w=600&auto=format&fit=crop',
     accent: 'rose',
     features: ['Minimal', 'Elegant', 'Modern'],
     defaultTitle: 'Vogue',
