@@ -9,15 +9,15 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
         <Logo size="sm" />
       </Link>
       <div className="flex gap-8 text-sm text-stone-500">
-        <a href="#themes" className="hover:text-stone-900">
-          {t.landing.footer?.templates || 'Templates'}
-        </a>
-        <a href="#" className="hover:text-stone-900">
-          {t.landing.footer?.support || 'Support'}
-        </a>
-        <a href="#" className="hover:text-stone-900">
-          {t.landing.footer?.login || 'Login'}
-        </a>
+        <Link href={`/${locale}/legal/impressum`} className="hover:text-stone-900">
+          Impressum
+        </Link>
+        <Link href={`/${locale}/legal/privacy`} className="hover:text-stone-900">
+          Privacy
+        </Link>
+        <Link href={`/${locale}/legal/terms`} className="hover:text-stone-900">
+          Terms
+        </Link>
       </div>
       <p className="text-stone-400 text-xs">
         {t.landing.footer?.copyright || '© 2026 wdng online Inc.'}

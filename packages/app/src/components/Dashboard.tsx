@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, Download, Copy, Check, X, Share2, Trash2, User, Plus } from 'lucide-react';
 import { getUserSites, toggleSitePublished, deleteSiteAction } from '@/actions/dashboard';
+import PayPalCheckout from './PayPalCheckout';
 import { useTranslations, useLocale } from '@/lib/i18n/useTranslations';
 import { toast } from 'sonner';
 import type { Site } from '@wdng/db/src/db';
@@ -369,6 +370,23 @@ export default function Dashboard({ locale: propLocale }: DashboardProps) {
                         {t.dashboard.site.delete}
                       </button>
                     </div>
+                    {/* Payment Section - HIDDEN FOR NOW */}
+                    {/* <div className="mt-4 pt-4 border-t border-stone-100">
+                      {site.is_paid ? (
+                        <div className="text-sm text-green-600 font-medium flex items-center gap-2 bg-green-50 p-2 rounded-lg">
+                          <Check size={16} />
+                          Premium Active
+                        </div>
+                      ) : (
+                        <PayPalCheckout 
+                          websiteId={site.id.toString()} 
+                          onSuccess={() => {
+                            setSites(sites.map(s => s.id === site.id ? { ...s, is_paid: true, is_published: 1 } : s));
+                            toast.success("Payment successful! Site activated.");
+                          }}
+                        />
+                      )}
+                    </div> */}
                   </div>
                 </div>
               );

@@ -73,7 +73,7 @@ export async function checkSubdomainAvailable(subdomain: string): Promise<Subdom
 /**
  * Save or update the user's wedding site
  */
-export async function saveSite(data: WeddingData, subdomain: string): Promise<SaveSiteResult> {
+export async function saveSite(data: WeddingData, subdomain: string, siteId?: number): Promise<SaveSiteResult> {
   try {
     const { userId } = await auth();
     
@@ -83,26 +83,27 @@ export async function saveSite(data: WeddingData, subdomain: string): Promise<Sa
 
     const cleanSubdomain = subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '-');
 
-    // Check if user already has a site
-    const existingSites = db.getSitesByClerkUserId(userId);
-    
-    if (existingSites.length > 0) {
-      // Update existing site - subdomain is LOCKED, ignore any subdomain changes
-      const site = existingSites[0];
-      const existingIndex = sites.findIndex((s: Site) => s.id === site.id);
-      if (existingIndex >= 0) {
-        sites[existingIndex] = {
-          ...sites[existingIndex],
-          config_json: JSON.stringify(data),
-          // Keep the original subdomain - it cannot be changed after first save
-          updated_at: new Date().toISOString()
-        };
-        db.persist(); // Save to file
-        return { success: true, siteId: site.id };
+    // If siteId is provided, we are updating a specific site
+    if (siteId) {
+      const site = db.findSiteById(siteId);
+      
+      if (!site || site.owner_clerk_id !== userId) {
+        return { success: false, error: 'Site not found or unauthorized' };
+      }
+
+      // Update existing site
+      const updatedSite = db.updateSiteById(siteId, JSON.stringify(data));
+      
+      if (updatedSite) {
+        return { success: true, siteId: updatedSite.id };
+      } else {
+        return { success: false, error: 'Failed to update site' };
       }
     }
 
-    // For new sites, check subdomain availability
+    // If no siteId, we are creating a NEW site
+    
+    // Check subdomain availability
     const existingSiteWithSubdomain = db.findSiteBySubdomain(cleanSubdomain);
     if (existingSiteWithSubdomain) {
       return { success: false, error: 'This subdomain is already taken. Please choose a different one.' };
@@ -119,9 +120,9 @@ export async function saveSite(data: WeddingData, subdomain: string): Promise<Sa
 }
 
 /**
- * Get the current user's site
+ * Get a specific site for the current user
  */
-export async function getUserSite(): Promise<GetSiteResult> {
+export async function getUserSite(siteId?: number): Promise<GetSiteResult> {
   try {
     const { userId } = await auth();
     
@@ -129,20 +130,32 @@ export async function getUserSite(): Promise<GetSiteResult> {
       return { success: false, error: 'Unauthorized' };
     }
 
-    const userSites = db.getSitesByClerkUserId(userId);
-    
-    if (userSites.length === 0) {
-      return { success: true, data: undefined };
+    // If siteId is provided, get that specific site
+    if (siteId) {
+      const site = db.findSiteById(siteId);
+      
+      // Verify ownership
+      if (!site || site.owner_clerk_id !== userId) {
+        return { success: false, error: 'Site not found or unauthorized' };
+      }
+
+      return {
+        success: true,
+        data: JSON.parse(site.config_json),
+        subdomain: site.subdomain,
+        siteId: site.id,
+        isSubdomainLocked: true
+      };
     }
 
-    const site = userSites[0];
-    return {
-      success: true,
-      data: JSON.parse(site.config_json),
-      subdomain: site.subdomain,
-      siteId: site.id,
-      isSubdomainLocked: true  // Site exists, subdomain is locked
-    };
+    // If no siteId provided, we are in "create mode" or "dashboard mode"
+    // For backward compatibility or default behavior, we could return the first site,
+    // but for "Create New Site" we want to return nothing so the builder starts fresh.
+    // However, the current implementation of BuilderApp calls this on mount.
+    // If we return nothing, BuilderApp uses INITIAL_DATA, which is what we want for a new site.
+    
+    return { success: true, data: undefined };
+
   } catch (error) {
     console.error('Error getting site:', error);
     return { success: false, error: 'Failed to get site' };
@@ -207,7 +220,13 @@ export async function getSiteById(siteId: number): Promise<GetSiteResult> {
  */
 export async function getSiteBySubdomain(subdomain: string): Promise<GetSiteResult> {
   try {
-    const site = db.findSiteBySubdomain(subdomain);
+    // Try to find by subdomain (case-insensitive)
+    let site = db.findSiteBySubdomain(subdomain.toLowerCase());
+    
+    // If not found, and input looks like an ID, try finding by ID
+    if (!site && !isNaN(Number(subdomain))) {
+      site = db.findSiteById(Number(subdomain));
+    }
     
     if (!site) {
       return { success: false, error: 'Site not found' };

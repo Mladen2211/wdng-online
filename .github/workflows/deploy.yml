@@ -1,0 +1,31 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        shell: bash
+        run: |
+          touch .env
+          echo "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" >> .env
+          echo "CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}" >> .env
+          echo "NEXT_PUBLIC_PAYPAL_CLIENT_ID=${{ secrets.NEXT_PUBLIC_PAYPAL_CLIENT_ID }}" >> .env
+          echo "PAYPAL_SECRET_KEY=${{ secrets.PAYPAL_SECRET_KEY }}" >> .env
+          echo "PAYPAL_API_URL=${{ secrets.PAYPAL_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_MAPBOX_TOKEN=${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}" >> .env
+          echo "APP_BASE_URL=${{ secrets.APP_BASE_URL }}" >> .env
+
+      - name: Deploy
+        run: |
+          docker compose down
+          docker compose up -d --build
+          docker image prune -f

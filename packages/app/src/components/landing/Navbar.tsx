@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, LayoutDashboard } from 'lucide-react';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { locales } from '@/lib/i18n/config';
@@ -12,7 +13,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   translations: t, 
   scrolled, 
   onStartBuilding 
-}) => (
+}) => {
+  const router = useRouter();
+
+  const handleStartBuilding = () => {
+    if (onStartBuilding) {
+      onStartBuilding();
+    } else {
+      router.push(`/${locale}/builder`);
+    }
+  };
+
+  return (
   <nav
     className={`fixed w-full z-50 transition-all duration-300 ${
       scrolled
@@ -26,15 +38,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       </Link>
 
       <div className="hidden md:flex items-center gap-8 text-sm font-medium text-stone-600">
-        <a href="#features" className="hover:text-stone-900 transition-colors">
+        <Link href={`/${locale}/#features`} className="hover:text-stone-900 transition-colors">
           {t.nav.features}
-        </a>
-        <a href="#themes" className="hover:text-stone-900 transition-colors">
+        </Link>
+        <Link href={`/${locale}/#themes`} className="hover:text-stone-900 transition-colors">
           {t.landing.themes?.title || 'Themes'}
-        </a>
-        <a href="#pricing" className="hover:text-stone-900 transition-colors">
-          {t.nav.pricing}
-        </a>
+        </Link>
 
         {/* Language Selector */}
         <div className="flex items-center gap-1 border-l border-stone-200 pl-4">
@@ -61,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </SignInButton>
         </SignedOut>
         <button
-          onClick={onStartBuilding}
+          onClick={handleStartBuilding}
           className="bg-stone-900 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-stone-800 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
         >
           {t.nav.getStarted} <ArrowRight size={16} />
@@ -80,6 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
     </div>
   </nav>
-);
+  );
+};
 
 export default Navbar;

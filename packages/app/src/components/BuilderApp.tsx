@@ -5,7 +5,7 @@ import { MapPin, X, Check, Layout, Camera, Edit3, Smartphone, GripVertical, Mail
 import Image from 'next/image';
 import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { WeddingData, Section } from '@/lib/types';
 import { THEMES, LAYOUTS, SECTION_TYPES, EVENT_ICONS } from '@/lib/constants';
@@ -22,6 +22,13 @@ const SITE_TRANSLATIONS = {
   en: {
     daysLabel: 'Days', hoursLabel: 'Hrs', minutesLabel: 'Min', secondsLabel: 'Sec',
     navLabels: ['Details', 'Info', 'Photos'],
+    sectionNames: {
+      events: 'Timeline',
+      photos: 'Photos',
+      faq: 'FAQ',
+      text: 'Our Story',
+      hero: 'Home'
+    },
     footerLinks: ['Instagram', 'Email', 'Map'],
     gallery: {
       label: 'Gallery',
@@ -34,6 +41,13 @@ const SITE_TRANSLATIONS = {
   de: {
     daysLabel: 'Tage', hoursLabel: 'Std', minutesLabel: 'Min', secondsLabel: 'Sek',
     navLabels: ['Details', 'Info', 'Fotos'],
+    sectionNames: {
+      events: 'Zeitplan',
+      photos: 'Fotos',
+      faq: 'FAQ',
+      text: 'Unsere Geschichte',
+      hero: 'Start'
+    },
     footerLinks: ['Instagram', 'Email', 'Karte'],
     gallery: {
       label: 'Galerie',
@@ -46,6 +60,13 @@ const SITE_TRANSLATIONS = {
   hr: {
     daysLabel: 'Dana', hoursLabel: 'Sati', minutesLabel: 'Min', secondsLabel: 'Sek',
     navLabels: ['Detalji', 'Info', 'Slike'],
+    sectionNames: {
+      events: 'Raspored',
+      photos: 'Slike',
+      faq: 'Česta Pitanja',
+      text: 'Naša Priča',
+      hero: 'Početna'
+    },
     footerLinks: ['Instagram', 'Email', 'Karta'],
     gallery: {
       label: 'Galerija',
@@ -136,6 +157,10 @@ interface BuilderAppProps {
 const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
   const t = getTranslations(locale);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editSiteId = searchParams.get('edit');
+  const siteId = editSiteId ? parseInt(editSiteId) : undefined;
+
   const { isSignedIn, user: clerkUser } = useUser();
   const [data, setData] = useState<WeddingData>(INITIAL_DATA);
   const [subdomain, setSubdomain] = useState('emma-liam');
@@ -171,17 +196,21 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
       try {
         // Load site data using server action if user is signed in
         if (isSignedIn) {
-          const result = await getUserSite();
-          if (result.success && result.data) {
-            setData(result.data);
-            if (result.subdomain) {
-              setSubdomain(result.subdomain);
-            }
-            // Lock subdomain if site has been saved before
-            if (result.isSubdomainLocked) {
-              setIsSubdomainLocked(true);
+          // If we have a siteId, load that specific site
+          if (siteId) {
+            const result = await getUserSite(siteId);
+            if (result.success && result.data) {
+              setData(result.data);
+              if (result.subdomain) {
+                setSubdomain(result.subdomain);
+              }
+              // Lock subdomain if site has been saved before
+              if (result.isSubdomainLocked) {
+                setIsSubdomainLocked(true);
+              }
             }
           }
+          // If no siteId, we are creating a new site, so we keep INITIAL_DATA
         }
       } catch (error) {
         console.error('Failed to load data:', error);
@@ -191,13 +220,24 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
     };
 
     loadData();
-  }, [isSignedIn]);
+  }, [isSignedIn, siteId]);
 
   // -- State Updaters --
 
   const updateGlobal = (field: string, value: string | string[]) => {
     setData(prev => {
       const newGlobal = { ...prev.global, [field]: value };
+
+      // Auto-update initials when bride or groom changes
+      if (field === 'bride' || field === 'groom') {
+        const brideName = field === 'bride' ? (value as string) : newGlobal.bride;
+        const groomName = field === 'groom' ? (value as string) : newGlobal.groom;
+        
+        if (brideName && groomName) {
+            newGlobal.initials = `${brideName.charAt(0).toUpperCase()} & ${groomName.charAt(0).toUpperCase()}`;
+        }
+      }
+
       // Auto-suggest subdomain when bride or groom changes (only if subdomain hasn't been locked and hasn't been manually edited)
       if (!isSubdomainLocked && (field === 'bride' || field === 'groom') && subdomain === `${prev.global.bride.toLowerCase()}-${prev.global.groom.toLowerCase()}`) {
         const newSubdomain = `${field === 'bride' ? value : newGlobal.bride}-${field === 'groom' ? value : newGlobal.groom}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
@@ -254,9 +294,15 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
         footerLinks: translations.footerLinks
       },
       sections: prev.sections.map(section => {
+        // Update section name based on type and locale
+        // @ts-ignore - sectionNames is added to translations but TS might not infer it immediately without full type update
+        const newName = translations.sectionNames[section.type] || section.name;
+        
+        let updatedSection = { ...section, name: newName };
+
         if (section.type === 'photos') {
-          return {
-            ...section,
+          updatedSection = {
+            ...updatedSection,
             data: {
               ...section.data,
               galleryLabel: translations.gallery.label,
@@ -267,7 +313,7 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
             }
           };
         }
-        return section;
+        return updatedSection;
       })
     }));
   };
@@ -280,13 +326,13 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
 
     try {
       const cleanSubdomain = subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-      const result = await saveSite(data, cleanSubdomain);
+      const result = await saveSite(data, cleanSubdomain, siteId);
 
       if (result.success) {
         // Lock subdomain after first successful save
         setIsSubdomainLocked(true);
         toast.success(t.builder.saveSuccess?.replace('{subdomain}', cleanSubdomain) || `Site saved! It will be available at ${cleanSubdomain}.wdng.online`);
-        router.push('/dashboard');
+        router.push(`/${locale}/dashboard`);
       } else {
         toast.error(result.error || t.common.error || "Failed to save configuration");
       }

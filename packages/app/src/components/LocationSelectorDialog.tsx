@@ -5,7 +5,7 @@ import { X, Check } from 'lucide-react';
 import Map, { Marker as MapboxMarker, NavigationControl, MapMouseEvent, MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoibWxhZGVuLXJhZ3V6IiwiYSI6ImNtank3aGJnYzAzcG4zY3M4Y2hjYmRqcmIifQ.ha-FZsBmrysFUTsntIwHsw';
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
 // Component to handle map centering
 const MapCenterHandler = ({ coordinates, mapRef }: { coordinates: { lat: number; lng: number }, mapRef: React.RefObject<MapRef | null> }) => {
@@ -37,6 +37,34 @@ const LocationSelectorDialog = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const mapRef = useRef<MapRef>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
+  if (!MAPBOX_TOKEN) {
+    return (
+      <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col p-8 text-center">
+          <h3 className="text-xl font-bold text-red-600 mb-2">Map Configuration Error</h3>
+          <p className="text-stone-600 mb-4">
+            The Mapbox token is missing. Please add <code>NEXT_PUBLIC_MAPBOX_TOKEN</code> to your environment variables.
+          </p>
+          <button 
+            onClick={onClose}
+            className="bg-stone-100 text-stone-800 px-4 py-2 rounded-lg hover:bg-stone-200 transition-colors self-center"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Search using OpenStreetMap Nominatim API with suggestions
   const handleSearch = async (query?: string) => {
@@ -110,15 +138,6 @@ const LocationSelectorDialog = ({
     const { lng, lat } = event.lngLat;
     handleLocationSelect(lat, lng);
   };
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-    };
-  }, [searchTimeout]);
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">

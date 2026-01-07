@@ -18,6 +18,7 @@ export default function AlbumManager({ albumId, albumUrl, onAlbumCreated }: Albu
   const [status, setStatus] = useState<Status>(albumId ? 'connected' : 'idle');
   const [error, setError] = useState<string | null>(null);
   const [albumName, setAlbumName] = useState('Wedding Photos');
+  const [consentGiven, setConsentGiven] = useState(false);
 
   const checkConnection = async () => {
     setStatus('checking');
@@ -241,7 +242,21 @@ export default function AlbumManager({ albumId, albumUrl, onAlbumCreated }: Albu
           />
         </div>
 
+        <div className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            id="google-consent"
+            checked={consentGiven}
+            onChange={(e) => setConsentGiven(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+          />
+          <label htmlFor="google-consent" className="text-xs text-stone-600">
+            I grant permission to access my Google Photos library for the sole purpose of selecting wedding photos.
+          </label>
+        </div>
+
         <button
+          disabled={!consentGiven}
           onClick={async () => {
             // First check connection, then create if connected
             setStatus('checking');
@@ -253,7 +268,9 @@ export default function AlbumManager({ albumId, albumUrl, onAlbumCreated }: Albu
               setError(connError || null);
             }
           }}
-          className="w-full px-4 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2"
+          className={`w-full px-4 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 ${
+            !consentGiven ? 'opacity-50 cursor-not-allowed' : 'hover:from-amber-600 hover:to-orange-600'
+          }`}
         >
           <Plus size={20} />
           Create Album in Google Photos

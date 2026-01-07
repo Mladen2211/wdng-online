@@ -27,6 +27,7 @@ export interface Site {
   google_album_id: string | null;
   public_album_url: string | null;
   owner_clerk_id: string | null;  // Clerk user ID for OAuth token retrieval
+  is_paid?: boolean;
 }
 
 // Ensure data directory exists
@@ -105,7 +106,8 @@ export const db = {
       updated_at: new Date().toISOString(),
       google_album_id: null,
       public_album_url: null,
-      owner_clerk_id: clerkUserId || null
+      owner_clerk_id: clerkUserId || null,
+      is_paid: false
     };
     sites.push(site);
     saveData(SITES_FILE, sites);
@@ -128,6 +130,20 @@ export const db = {
     return null;
   },
 
+  updateSiteById: (siteId: number, configJson: string) => {
+    const existingIndex = sites.findIndex(s => s.id === siteId);
+    if (existingIndex >= 0) {
+      sites[existingIndex] = {
+        ...sites[existingIndex],
+        config_json: configJson,
+        updated_at: new Date().toISOString()
+      };
+      saveData(SITES_FILE, sites);
+      return sites[existingIndex];
+    }
+    return null;
+  },
+
   updateSiteAlbum: (userId: number, googleAlbumId: string, publicAlbumUrl: string) => {
     const existingIndex = sites.findIndex(s => s.user_id === userId);
     if (existingIndex >= 0) {
@@ -135,6 +151,21 @@ export const db = {
         ...sites[existingIndex],
         google_album_id: googleAlbumId,
         public_album_url: publicAlbumUrl,
+        updated_at: new Date().toISOString()
+      };
+      saveData(SITES_FILE, sites);
+      return sites[existingIndex];
+    }
+    return null;
+  },
+
+  updateSitePayment: (siteId: number, isPaid: boolean) => {
+    const existingIndex = sites.findIndex(s => s.id === siteId);
+    if (existingIndex >= 0) {
+      sites[existingIndex] = {
+        ...sites[existingIndex],
+        is_paid: isPaid,
+        is_published: isPaid ? 1 : sites[existingIndex].is_published,
         updated_at: new Date().toISOString()
       };
       saveData(SITES_FILE, sites);

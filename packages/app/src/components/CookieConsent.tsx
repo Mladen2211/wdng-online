@@ -40,7 +40,7 @@ export default function CookieConsent() {
                 label: "Analytics",
                 description:
                   "These help us understand how visitors interact with the website.",
-                defaultValue: true,
+                defaultValue: false,
                 gtag: "analytics_storage",
                 scripts: [
                   {

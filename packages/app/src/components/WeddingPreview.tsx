@@ -22,6 +22,12 @@ interface WeddingPreviewProps {
 
 const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPreview = false }) => {
   const { config, global, sections } = data;
+  
+  // Derive initials from names if available, otherwise use stored initials or fallback
+  const displayInitials = (global.bride && global.groom) 
+    ? `${global.bride.charAt(0)} & ${global.groom.charAt(0)}` 
+    : (global.initials || 'W & W');
+
   const theme = THEMES[config.selectedTheme].colors;
   const layout = config.selectedLayout;
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -88,7 +94,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
       {/* Dynamic Nav */}
       <nav className={`sticky top-0 w-full z-50 transition-all duration-300 ${scrolled ? `bg-white/95 backdrop-blur-md border-b ${theme.border} py-3 shadow-sm` : layout === 'immersive' ? 'bg-black/20 backdrop-blur-sm py-6' : `bg-white/90 backdrop-blur-sm border-b ${theme.border} py-6`}`}>
         <div className="px-6 flex justify-between items-center">
-          <span className={`font-serif text-xl font-bold tracking-wide ${scrolled ? theme.gradientText : layout === 'immersive' ? 'text-white drop-shadow-lg' : theme.gradientText}`}>{global.initials}</span>
+          <span className={`font-serif text-xl font-bold tracking-wide ${scrolled ? theme.gradientText : layout === 'immersive' ? 'text-white drop-shadow-lg' : theme.gradientText}`}>{displayInitials}</span>
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navLabels.map((label, index) => (
@@ -143,7 +149,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
 
       {/* 3. FOOTER */}
       <footer className="bg-stone-900 text-white py-20 text-center">
-        <h2 className={`font-serif text-3xl ${theme.gradientText} mb-6`}>{global.initials}</h2>
+        <h2 className={`font-serif text-3xl ${theme.gradientText} mb-6`}>{displayInitials}</h2>
         <div className="flex justify-center gap-6 mb-8 text-xs font-bold uppercase tracking-widest text-stone-500">
            {global.footerLinks.map(l => <span key={l} className="hover:text-white cursor-pointer transition-colors">{l}</span>)}
         </div>
@@ -262,6 +268,14 @@ interface SectionRendererProps {
 const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layout, sectionIndex, isPreview, siteInfo }) => {
   const { type, data } = section;
 
+  const handleLocationClick = (item: any) => {
+    if (item.coordinates && item.coordinates.lat && item.coordinates.lng) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${item.coordinates.lat},${item.coordinates.lng}`, '_blank');
+    } else if (item.location) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`, '_blank');
+    }
+  };
+
   if (type === 'events') {
     return (
       <section id={`section-${sectionIndex}`} className={`py-20 px-6 ${theme.bg}`}>
@@ -278,7 +292,13 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                   <div key={idx} className="border-r border-b border-stone-200 p-8 hover:bg-stone-50 transition-colors">
                      <span className="text-[10px] uppercase tracking-widest text-stone-400">0{idx+1}</span>
                      <h3 className={`font-serif text-2xl ${theme.text} mt-2 mb-1`}>{item.title}</h3>
-                     <p className={`text-sm ${theme.textMuted} mb-4`}>{item.location}</p>
+                     <button 
+                       onClick={() => handleLocationClick(item)}
+                       className={`text-sm ${theme.textMuted} mb-4 hover:underline hover:text-stone-800 text-left`}
+                       title="Open in Maps"
+                     >
+                       {item.location}
+                     </button>
                      <div className="text-xl font-serif italic">{item.time}</div>
                   </div>
                 ) : (
@@ -288,7 +308,17 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                      </div>
                      <div className="flex-1">
                         <h3 className={`font-serif text-2xl ${theme.text}`}>{item.title}</h3>
-                        <p className={`text-sm ${theme.textMuted} uppercase tracking-wider mt-1`}>{item.location} • <span className={theme.accent}>{item.time}</span></p>
+                        <div className={`text-sm ${theme.textMuted} uppercase tracking-wider mt-1 flex items-center justify-center md:justify-start gap-2`}>
+                          <button 
+                            onClick={() => handleLocationClick(item)}
+                            className="hover:underline hover:text-stone-800 flex items-center gap-1"
+                            title="Open in Maps"
+                          >
+                            {item.location}
+                          </button>
+                          <span>•</span>
+                          <span className={theme.accent}>{item.time}</span>
+                        </div>
                         {item.description && <p className="text-stone-400 text-sm mt-2">{item.description}</p>}
                      </div>
                   </div>

@@ -51,7 +51,7 @@ export const ThemesSection: React.FC<ThemesSectionProps> = ({ translations: t })
         <SectionHeader
           title={themes?.title || 'Themes that stun'}
           subtitle={themes?.subtitle || 'Editorial designs usually reserved for magazines.'}
-          badge="Premium Themes"
+          badge="Designer Themes"
         />
       </div>
 

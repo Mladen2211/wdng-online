@@ -54,7 +54,7 @@ export interface NavbarProps {
   locale: Locale;
   translations: TranslationKeys;
   scrolled: boolean;
-  onStartBuilding: () => void;
+  onStartBuilding?: () => void;
 }
 
 export interface FooterProps {
