@@ -12,7 +12,7 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
         <Link href={`/${locale}/legal/impressum`} className="hover:text-stone-900">
           Impressum
         </Link>
-        <Link href={`/${locale}/terms/privacy`} className="hover:text-stone-900">
+        <Link href={`https://wdng.online/${locale}/terms/privacy`} className="hover:text-stone-900">
           Privacy Policy
         </Link>
         <Link href={`/${locale}/legal/terms`} className="hover:text-stone-900">

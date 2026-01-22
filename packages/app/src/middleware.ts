@@ -33,8 +33,13 @@ export default clerkMiddleware(async (auth, request) => {
 
   // If no locale in path, redirect to default locale
   if (!pathnameLocale) {
+    // Rewrite root to default locale to support Google Verification (avoids redirect)
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL(`/${defaultLocale}`, request.url));
+    }
+
     const url = request.nextUrl.clone();
-    url.pathname = `/${defaultLocale}${pathname === '/' ? '' : pathname}`;
+    url.pathname = `/${defaultLocale}${pathname}`;
     return NextResponse.redirect(url);
   }
 
