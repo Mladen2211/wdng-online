@@ -13,7 +13,7 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
           Impressum
         </Link>
         <Link href={`/${locale}/legal/privacy`} className="hover:text-stone-900">
-          Privacy
+          Privacy Policy
         </Link>
         <Link href={`/${locale}/legal/terms`} className="hover:text-stone-900">
           Terms

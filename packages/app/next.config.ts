@@ -28,6 +28,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/terms/privacy',
+        destination: '/en/legal/privacy',
+        permanent: true,
+      },
+      {
+        source: '/:locale/terms/privacy',
+        destination: '/:locale/legal/privacy',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
