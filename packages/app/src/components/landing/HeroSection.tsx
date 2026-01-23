@@ -22,10 +22,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ translations: t, onSta
         >
           {t.landing.hero.cta}
         </button>
-        <button className="w-full sm:w-auto px-8 py-4 bg-white text-stone-700 border border-stone-200 rounded-full font-bold text-lg hover:bg-stone-50 transition-all flex items-center justify-center gap-2">
-          <Play size={18} fill="currentColor" className="text-stone-300" />
-          {t.landing.hero.secondaryCta}
-        </button>
       </div>
 
       <BuilderMockup />
