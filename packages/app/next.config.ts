@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '20mb',
     },
   },
-  transpilePackages: ['react-map-gl', 'mapbox-gl'],
+  transpilePackages: ['react-map-gl', 'mapbox-gl', '@wdng/db'],
   images: {
     remotePatterns: [
       {

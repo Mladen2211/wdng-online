@@ -141,11 +141,11 @@ export default function AssetUploader({
       >
         {value ? (
           <div className="relative w-full h-full min-h-[150px]">
-            <Image
+             {/* Use standard img tag to avoid Next.js Image Optimization issues with runtime local uploads */}
+            <img
               src={value}
               alt="Uploaded image"
-              fill
-              className="object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors group">
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
