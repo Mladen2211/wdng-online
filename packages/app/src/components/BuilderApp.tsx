@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, X, Check, Layout, Camera, Edit3, Smartphone, GripVertical, Mail, Globe, QrCode, LayoutDashboard, Plus, Trash2, Save, HelpCircle, AlignLeft } from 'lucide-react';
+import { MapPin, X, Check, Layout, Camera, Edit3, Smartphone, GripVertical, Mail, Globe, QrCode, LayoutDashboard, Plus, Trash2, Save, HelpCircle, AlignLeft, Clock, Music, Heart, Star, Gift, Cake, Wine, Car, Plane, Home, UtensilsCrossed, Church } from 'lucide-react';
 import Image from 'next/image';
 import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
@@ -1464,7 +1464,7 @@ const MobileWarning = () => (
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const getIconComponent = (iconName: string) => {
   const icons: Record<string, React.ComponentType<any>> = {
-    MapPin, Camera, HelpCircle, AlignLeft, Mail
+    MapPin, Camera, HelpCircle, AlignLeft, Mail, Clock, Music, Heart, Star, Gift, Cake, Wine, Car, Plane, Home, UtensilsCrossed, Church
   };
   const IconComponent = icons[iconName] || MapPin;
   return <IconComponent size={16} />;

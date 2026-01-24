@@ -1,13 +1,32 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Camera, Star } from 'lucide-react';
+import { Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Camera, Star, MapPin, Gift, Cake, Wine, Car, Plane, Home, UtensilsCrossed, Church } from 'lucide-react';
 import { WeddingData } from '@/lib/types';
 import { THEMES } from '@/lib/constants';
 import GuestUploader from './GuestUploader';
 import GuestGallery from './GuestGallery';
 
 // --- PREVIEW RENDERER ---
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  clock: Clock,
+  music: Music,
+  heart: Heart,
+  camera: Camera,
+  'map-pin': MapPin,
+  star: Star,
+  gift: Gift,
+  cake: Cake,
+  wine: Wine,
+  car: Car,
+  plane: Plane,
+  home: Home,
+  utensils: UtensilsCrossed,
+  church: Church
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export interface SiteInfo {
   siteId: string;
@@ -285,7 +304,10 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
              <h2 className={`font-serif text-4xl md:text-5xl ${theme.text} mb-2`}>{data.title}</h2>
              {data.subtitle && <p className={`${theme.textMuted}`}>{data.subtitle}</p>}
           </div>
-          <div className={`${layout === 'vogue' ? 'grid grid-cols-1 border-t border-l border-stone-200' : 'space-y-6'}`}>
+          <div className=(() => {
+                          const IconComponent = ICON_MAP[item.iconType] || Clock;
+                          return <IconComponent size={24} />;
+                        })()-stone-200' : 'space-y-6'}`}>
              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
              {data.items?.map((item: any, idx: number) => (
                 layout === 'vogue' ? (
