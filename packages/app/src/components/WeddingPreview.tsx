@@ -304,10 +304,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
              <h2 className={`font-serif text-4xl md:text-5xl ${theme.text} mb-2`}>{data.title}</h2>
              {data.subtitle && <p className={`${theme.textMuted}`}>{data.subtitle}</p>}
           </div>
-          <div className=(() => {
-                          const IconComponent = ICON_MAP[item.iconType] || Clock;
-                          return <IconComponent size={24} />;
-                        })()-stone-200' : 'space-y-6'}`}>
+          <div className={`${layout === 'vogue' ? 'grid grid-cols-1 border-t border-l border-stone-200' : 'space-y-6'}`}>
              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
              {data.items?.map((item: any, idx: number) => (
                 layout === 'vogue' ? (
@@ -326,7 +323,10 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                 ) : (
                   <div key={idx} className="bg-white p-8 rounded-2xl shadow-sm border border-stone-100 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
                      <div className={`w-16 h-16 rounded-full ${theme.accentLight} flex items-center justify-center ${theme.accent}`}>
-                        {item.iconType === 'music' ? <Music size={24}/> : <Clock size={24}/>}
+                        {(() => {
+                           const IconComponent = ICON_MAP[item.iconType] || Clock;
+                           return <IconComponent size={24} />;
+                        })()}
                      </div>
                      <div className="flex-1">
                         <h3 className={`font-serif text-2xl ${theme.text}`}>{item.title}</h3>
