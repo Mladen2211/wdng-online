@@ -204,6 +204,10 @@ export const db = {
     return null;
   },
 
+  getPublishedSites: () => {
+    return sites.filter(s => s.is_published === 1 && s.subdomain);
+  },
+
   deleteSite: (siteId: number) => {
     const existingIndex = sites.findIndex(s => s.id === siteId);
     if (existingIndex >= 0) {

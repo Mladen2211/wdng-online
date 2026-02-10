@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { db } from '@wdng/db';
 
 const SITE_URL = 'https://wdng.online';
 const LOCALES = ['en', 'de', 'hr'];
@@ -30,22 +31,43 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
+  ]);
+
+  // Legal pages
+  const legalPages = LOCALES.flatMap((locale) => [
     {
-      url: `${SITE_URL}/${locale}/dashboard`,
+      url: `${SITE_URL}/${locale}/legal/impressum`,
       lastModified: currentDate,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+    },
+    {
+      url: `${SITE_URL}/${locale}/legal/terms`,
+      lastModified: currentDate,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+    },
+    {
+      url: `${SITE_URL}/${locale}/terms/privacy`,
+      lastModified: currentDate,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
     },
   ]);
 
-  // TODO: Add dynamic wedding site pages here when we have a database
-  // const weddingSites = await getAllPublishedSites();
-  // const dynamicPages = weddingSites.map((site) => ({
-  //   url: `https://${site.subdomain}.wdng.online`,
-  //   lastModified: site.updatedAt,
-  //   changeFrequency: 'weekly' as const,
-  //   priority: 0.6,
-  // }));
+  // Published wedding sites on subdomains
+  let weddingSitePages: MetadataRoute.Sitemap = [];
+  try {
+    const publishedSites = db.getPublishedSites();
+    weddingSitePages = publishedSites.map((site) => ({
+      url: `https://${site.subdomain}.wdng.online`,
+      lastModified: site.updated_at,
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }));
+  } catch (error) {
+    console.error('Error fetching published sites for sitemap:', error);
+  }
 
-  return [...staticPages, ...localizedPages];
+  return [...staticPages, ...localizedPages, ...legalPages, ...weddingSitePages];
 }
