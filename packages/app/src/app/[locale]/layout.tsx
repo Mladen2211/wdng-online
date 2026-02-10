@@ -1,3 +1,6 @@
+// Force dynamic rendering for pages that use Clerk authentication
+export const dynamic = 'force-dynamic';
+
 export default async function LocaleLayout({
   children,
   params,
@@ -14,10 +17,4 @@ export default async function LocaleLayout({
   );
 }
 
-export function generateStaticParams() {
-  return [
-    { locale: 'en' },
-    { locale: 'de' },
-    { locale: 'hr' },
-  ];
-}
+// Note: generateStaticParams removed to allow dynamic rendering with Clerk

@@ -283,11 +283,11 @@ export default function Dashboard({ locale: propLocale }: DashboardProps) {
                   {/* Preview Image */}
                   <div className="h-40 bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center relative">
                     {data?.global.heroImage ? (
-                      <Image 
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img 
                         src={data.global.heroImage} 
                         alt="Site preview" 
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
                       <div className="text-4xl">💍</div>

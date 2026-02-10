@@ -8,6 +8,9 @@ import { generateSEOMetadata, viewport as seoViewport } from "@/lib/seo";
 import { Toaster } from "sonner";
 import "./globals.css";
 
+// Force dynamic rendering at the root level to handle Clerk during build
+export const dynamic = 'force-dynamic';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import type { WeddingData } from '@/lib/types';
 
 const SITE_NAME = 'wdng.online';
 const SITE_URL = 'https://wdng.online';
@@ -399,4 +400,125 @@ export function generateCombinedSchema() {
     generateSoftwareApplicationSchema(),
     generateHowToSchema(),
   ];
+}
+
+// ============================================================
+// Wedding Site SEO (per-subdomain)
+// ============================================================
+
+interface WeddingSiteSEO {
+  subdomain: string;
+  data: WeddingData;
+}
+
+/**
+ * Generate metadata for an individual wedding site on a subdomain.
+ * Used by sites/[siteId]/page.tsx generateMetadata().
+ */
+export function generateWeddingSiteMetadata({ subdomain, data }: WeddingSiteSEO): Metadata {
+  const { bride, groom, dateFull, locationCity, locationCountry, heroImage } = data.global;
+  const coupleName = `${bride} & ${groom}`;
+  const title = `${coupleName} — Wedding`;
+  const location = [locationCity, locationCountry].filter(Boolean).join(', ');
+  const description = location
+    ? `You're invited to celebrate the wedding of ${coupleName} on ${dateFull} in ${location}.`
+    : `You're invited to celebrate the wedding of ${coupleName} on ${dateFull}.`;
+
+  const siteUrl = `https://${subdomain}.wdng.online`;
+  const ogImage = heroImage || `${SITE_URL}/screenshots/landing.png`;
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: title,
+      template: `%s | ${coupleName}`,
+    },
+    description,
+    applicationName: coupleName,
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+      },
+    },
+    alternates: {
+      canonical: siteUrl,
+    },
+    openGraph: {
+      type: 'website',
+      url: siteUrl,
+      siteName: `${coupleName} Wedding`,
+      title,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${coupleName} Wedding`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
+    icons: {
+      icon: [
+        { url: '/favicon.ico', sizes: 'any' },
+        { url: '/icon.svg', type: 'image/svg+xml' },
+      ],
+    },
+  };
+}
+
+/**
+ * Generate JSON-LD Event schema for a wedding site.
+ * Embeds as structured data so search engines show rich results.
+ */
+export function generateWeddingEventSchema({ subdomain, data }: WeddingSiteSEO): Record<string, unknown> {
+  const { bride, groom, dateFull, locationCity, locationCountry, heroImage } = data.global;
+  const coupleName = `${bride} & ${groom}`;
+  const location = [locationCity, locationCountry].filter(Boolean).join(', ');
+
+  // Try to parse the target date for ISO format
+  let startDate: string | undefined;
+  try {
+    const parsed = new Date(data.config.targetDate);
+    if (!isNaN(parsed.getTime())) {
+      startDate = parsed.toISOString();
+    }
+  } catch { /* ignore parse errors */ }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: `${coupleName} Wedding`,
+    description: `Wedding celebration of ${coupleName}${location ? ` in ${location}` : ''}.`,
+    startDate: startDate || dateFull,
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    eventStatus: 'https://schema.org/EventScheduled',
+    ...(heroImage && {
+      image: [heroImage],
+    }),
+    location: {
+      '@type': 'Place',
+      name: location || 'Wedding Venue',
+      address: {
+        '@type': 'PostalAddress',
+        ...(locationCity && { addressLocality: locationCity }),
+        ...(locationCountry && { addressCountry: locationCountry }),
+      },
+    },
+    organizer: {
+      '@type': 'Person',
+      name: coupleName,
+      url: `https://${subdomain}.wdng.online`,
+    },
+  };
 }

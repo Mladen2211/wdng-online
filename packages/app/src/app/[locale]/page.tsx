@@ -3,6 +3,9 @@ import { generateSEOMetadata } from '@/lib/seo';
 import LandingPage from '@/components/LandingPage';
 import { Locale, isValidLocale, defaultLocale } from '@/lib/i18n/config';
 
+// Force dynamic rendering to avoid Clerk issues during build
+export const dynamic = 'force-dynamic';
+
 // Localized metadata for each language
 const LOCALIZED_METADATA: Record<Locale, { title: string; description: string }> = {
   en: {
