@@ -26,7 +26,7 @@ services:
         NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
     restart: always
     user: root
-    entrypoint: ["sh", "-c", "chown -R nextjs:nodejs /app/packages/app/public/uploads /app/data && exec su-exec nextjs node packages/app/server.js"]
+    entrypoint: ["sh", "-c", "chown -R nextjs:nodejs /app/packages/app/public/uploads /app/packages/app/data && exec su-exec nextjs node packages/app/server.js"]
     env_file:
       - .env
     environment:
@@ -34,7 +34,7 @@ services:
       - PORT=3000
     volumes:
       - ./uploads:/app/packages/app/public/uploads
-      - ./app-data:/app/data
+      - ./app-data:/app/packages/app/data
     depends_on:
       - db
     networks:
