@@ -22,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
         {/* Links */}
         <div className="flex flex-col sm:flex-row gap-8 sm:gap-16">
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Legal</h4>
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Legal</h3>
             <div className="flex flex-col gap-3 text-sm">
               <Link href={`/${locale}/legal/impressum`} className="hover:text-white transition-colors">
                 Impressum
@@ -37,7 +37,7 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
           </div>
 
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Connect</h4>
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Connect</h3>
             <div className="flex flex-col gap-3 text-sm">
               <a
                 href="https://instagram.com/wdng.online"
@@ -62,10 +62,10 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
 
       {/* Bottom section */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8">
-        <p className="text-stone-500 text-xs">
+        <p className="text-stone-400 text-xs">
           {t.landing.footer?.copyright || '© 2026 wdng online Inc. All rights reserved.'}
         </p>
-        <p className="text-stone-500 text-xs flex items-center gap-1">
+        <p className="text-stone-400 text-xs flex items-center gap-1">
           Made with <Heart size={12} className="text-rose-400 fill-rose-400" /> for couples everywhere
         </p>
       </div>

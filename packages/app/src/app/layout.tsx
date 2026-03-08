@@ -39,7 +39,6 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
-          <link rel="stylesheet" href="/silktide-consent-manager.css" />
           {/* Performance: Preconnect to critical third-party domains */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -95,7 +94,9 @@ export default function RootLayout({
             `}
           </Script>
           <CookieConsent />
-          {children}
+          <main id="main-content">
+            {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>

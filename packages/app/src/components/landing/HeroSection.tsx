@@ -73,7 +73,7 @@ const BrowserChrome: React.FC = () => (
       <div className="w-3 h-3 rounded-full bg-amber-400/80" />
       <div className="w-3 h-3 rounded-full bg-green-400/80" />
     </div>
-    <div className="mx-auto bg-stone-50 px-32 py-1 rounded-md text-[10px] text-stone-400 font-mono">
+    <div className="mx-auto bg-stone-50 px-32 py-1 rounded-md text-[10px] text-stone-600 font-mono" aria-hidden="true">
       wdng.online/editor
     </div>
   </div>
@@ -111,16 +111,17 @@ const MockupPreview: React.FC = () => (
     <div className="w-[80%] h-[90%] bg-white rounded-xl shadow-lg overflow-hidden relative">
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
           fill
+          sizes="(max-width: 768px) 50vw, 33vw"
           className="object-cover opacity-90"
-          alt="Preview"
-          unoptimized
+          alt="Wedding website builder preview showing a couple's wedding site"
+          priority
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white">
             <div className="text-4xl font-serif mb-2">Emma & Liam</div>
-            <div className="text-xs uppercase tracking-widest bg-white/20 backdrop-blur-md py-1 px-3 rounded-full">
+            <div className="text-xs uppercase tracking-widest bg-white/20 backdrop-blur-md py-1 px-3 rounded-full" aria-hidden="true">
               May 10, 2026
             </div>
           </div>
@@ -141,7 +142,7 @@ const FloatingBadge: React.FC = () => (
       </div>
       <div>
         <div className="text-xs font-bold text-stone-800">Layout Saved</div>
-        <div className="text-[10px] text-stone-400">Just now</div>
+        <div className="text-[10px] text-stone-600">Just now</div>
       </div>
     </div>
   </div>

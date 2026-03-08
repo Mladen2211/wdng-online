@@ -163,7 +163,7 @@ export function generateSEOMetadata(config: SEOConfig = {}): Metadata {
         'en': `${SITE_URL}/en`,
         'de': `${SITE_URL}/de`,
         'hr': `${SITE_URL}/hr`,
-        'x-default': SITE_URL,
+        'x-default': `${SITE_URL}/en`,
       },
     },
 
