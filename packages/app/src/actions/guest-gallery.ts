@@ -68,7 +68,8 @@ export async function getWeddingGallery(
         albumId: albumId,
         pageSize: Math.min(pageSize, 100),
         ...(pageToken && { pageToken })
-      })
+      }),
+      cache: 'no-store'
     });
 
     if (!response.ok) {

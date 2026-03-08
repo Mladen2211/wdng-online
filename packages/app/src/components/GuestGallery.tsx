@@ -10,12 +10,14 @@ interface GuestGalleryProps {
   albumId: string;
   ownerClerkId: string;
   initialPageSize?: number;
+  refreshKey?: number;
 }
 
 export default function GuestGallery({ 
   albumId, 
   ownerClerkId,
-  initialPageSize = 20 
+  initialPageSize = 20,
+  refreshKey = 0
 }: GuestGalleryProps) {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export default function GuestGallery({
 
   useEffect(() => {
     loadPhotos();
-  }, [loadPhotos]);
+  }, [loadPhotos, refreshKey]);
 
   const handleLoadMore = () => {
     if (nextPageToken && !loadingMore) {

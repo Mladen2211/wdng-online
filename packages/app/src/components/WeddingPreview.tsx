@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Camera, Star, MapPin, Gift, Cake, Wine, Car, Plane, Home, UtensilsCrossed, Church, Mail, Phone, Instagram } from 'lucide-react';
 import { WeddingData } from '@/lib/types';
 import { THEMES } from '@/lib/constants';
@@ -52,6 +52,11 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
+
+  const handleUploadComplete = useCallback(() => {
+    setGalleryRefreshKey(prev => prev + 1);
+  }, []);
 
   // Generate navigation labels from sections
   const navLabels = sections.map(section => section.name || section.type.charAt(0).toUpperCase() + section.type.slice(1));
@@ -458,6 +463,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                   albumId={data.albumId!}
                   ownerClerkId={siteInfo.ownerClerkId!}
                   siteId={siteInfo.siteId}
+                  onUploadComplete={handleUploadComplete}
                 />
               </div>
             )}
@@ -467,6 +473,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
               <GuestGallery
                 albumId={data.albumId!}
                 ownerClerkId={siteInfo.ownerClerkId!}
+                refreshKey={galleryRefreshKey}
               />
             )}
 

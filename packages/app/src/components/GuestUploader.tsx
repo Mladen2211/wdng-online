@@ -10,6 +10,7 @@ interface GuestUploaderProps {
   ownerClerkId: string;
   siteId: string;
   maxUploads?: number;
+  onUploadComplete?: () => void;
 }
 
 interface FilePreview {
@@ -25,7 +26,8 @@ export default function GuestUploader({
   albumId, 
   ownerClerkId, 
   siteId,
-  maxUploads = 25 
+  maxUploads = 25,
+  onUploadComplete
 }: GuestUploaderProps) {
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -129,6 +131,12 @@ export default function GuestUploader({
     }
 
     setIsUploading(false);
+
+    // Notify parent to refresh gallery
+    if (successCount > 0 && onUploadComplete) {
+      // Small delay to allow Google Photos to index the new uploads
+      setTimeout(() => onUploadComplete(), 1500);
+    }
 
     // Clear successful uploads after a delay
     setTimeout(() => {
