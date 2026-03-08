@@ -412,20 +412,79 @@ interface WeddingSiteSEO {
 }
 
 /**
+ * Locale-aware description templates for couple wedding sites.
+ */
+const WEDDING_SEO_TEMPLATES: Record<string, {
+  title: (couple: string) => string;
+  descriptionWithLocation: (couple: string, date: string, location: string) => string;
+  descriptionWithoutLocation: (couple: string, date: string) => string;
+  keywords: (couple: string, location: string) => string[];
+}> = {
+  en: {
+    title: (couple) => `${couple} — Wedding`,
+    descriptionWithLocation: (couple, date, location) =>
+      `You're invited to celebrate the wedding of ${couple} on ${date} in ${location}. View details, RSVP, and more.`,
+    descriptionWithoutLocation: (couple, date) =>
+      `You're invited to celebrate the wedding of ${couple} on ${date}. View details, RSVP, and more.`,
+    keywords: (couple, location) => [
+      `${couple} wedding`,
+      `${couple} wedding website`,
+      ...(location ? [`wedding ${location}`, `${couple} ${location}`] : []),
+      'wedding invitation',
+      'wedding RSVP',
+    ],
+  },
+  de: {
+    title: (couple) => `${couple} — Hochzeit`,
+    descriptionWithLocation: (couple, date, location) =>
+      `Sie sind herzlich eingeladen, die Hochzeit von ${couple} am ${date} in ${location} zu feiern. Details, RSVP und mehr.`,
+    descriptionWithoutLocation: (couple, date) =>
+      `Sie sind herzlich eingeladen, die Hochzeit von ${couple} am ${date} zu feiern. Details, RSVP und mehr.`,
+    keywords: (couple, location) => [
+      `${couple} Hochzeit`,
+      `${couple} Hochzeitswebsite`,
+      ...(location ? [`Hochzeit ${location}`, `${couple} ${location}`] : []),
+      'Hochzeitseinladung',
+      'Hochzeit RSVP',
+    ],
+  },
+  hr: {
+    title: (couple) => `${couple} — Vjenčanje`,
+    descriptionWithLocation: (couple, date, location) =>
+      `Pozivamo vas na vjenčanje ${couple}, ${date} u ${location}. Pogledajte detalje, potvrdite dolazak i više.`,
+    descriptionWithoutLocation: (couple, date) =>
+      `Pozivamo vas na vjenčanje ${couple}, ${date}. Pogledajte detalje, potvrdite dolazak i više.`,
+    keywords: (couple, location) => [
+      `${couple} vjenčanje`,
+      `${couple} web stranica za vjenčanje`,
+      ...(location ? [`vjenčanje ${location}`, `${couple} ${location}`] : []),
+      'pozivnica za vjenčanje',
+      'vjenčanje RSVP',
+    ],
+  },
+};
+
+/**
  * Generate metadata for an individual wedding site on a subdomain.
  * Used by sites/[siteId]/page.tsx generateMetadata().
  */
 export function generateWeddingSiteMetadata({ subdomain, data }: WeddingSiteSEO): Metadata {
   const { bride, groom, dateFull, locationCity, locationCountry, heroImage } = data.global;
+  const locale = data.config.siteLocale || 'en';
+  const templates = WEDDING_SEO_TEMPLATES[locale] || WEDDING_SEO_TEMPLATES.en;
+
   const coupleName = `${bride} & ${groom}`;
-  const title = `${coupleName} — Wedding`;
+  const title = templates.title(coupleName);
   const location = [locationCity, locationCountry].filter(Boolean).join(', ');
   const description = location
-    ? `You're invited to celebrate the wedding of ${coupleName} on ${dateFull} in ${location}.`
-    : `You're invited to celebrate the wedding of ${coupleName} on ${dateFull}.`;
+    ? templates.descriptionWithLocation(coupleName, dateFull, location)
+    : templates.descriptionWithoutLocation(coupleName, dateFull);
+  const keywords = templates.keywords(coupleName, location);
 
   const siteUrl = `https://${subdomain}.wdng.online`;
   const ogImage = heroImage || `${SITE_URL}/screenshots/landing.png`;
+
+  const ogLocale = locale === 'de' ? 'de_DE' : locale === 'hr' ? 'hr_HR' : 'en_US';
 
   return {
     metadataBase: new URL(siteUrl),
@@ -434,7 +493,8 @@ export function generateWeddingSiteMetadata({ subdomain, data }: WeddingSiteSEO)
       template: `%s | ${coupleName}`,
     },
     description,
-    applicationName: coupleName,
+    keywords: keywords.join(', '),
+    applicationName: `${coupleName} Wedding`,
     robots: {
       index: true,
       follow: true,
@@ -449,6 +509,7 @@ export function generateWeddingSiteMetadata({ subdomain, data }: WeddingSiteSEO)
     },
     openGraph: {
       type: 'website',
+      locale: ogLocale,
       url: siteUrl,
       siteName: `${coupleName} Wedding`,
       title,
@@ -480,6 +541,7 @@ export function generateWeddingSiteMetadata({ subdomain, data }: WeddingSiteSEO)
 /**
  * Generate JSON-LD Event schema for a wedding site.
  * Embeds as structured data so search engines show rich results.
+ * Pulls venue details from event sections when available.
  */
 export function generateWeddingEventSchema({ subdomain, data }: WeddingSiteSEO): Record<string, unknown> {
   const { bride, groom, dateFull, locationCity, locationCountry, heroImage } = data.global;
@@ -495,6 +557,37 @@ export function generateWeddingEventSchema({ subdomain, data }: WeddingSiteSEO):
     }
   } catch { /* ignore parse errors */ }
 
+  // Extract venue details from event sections for richer structured data
+  const eventSection = data.sections.find(s => s.type === 'events');
+  const eventItems = (eventSection?.data as import('@/lib/types').EventsData)?.items;
+  const firstEvent = eventItems?.[0];
+
+  // Build sub-events from event items if available
+  const subEvents = eventItems?.map(item => ({
+    '@type': 'Event',
+    name: item.title,
+    startDate: startDate || dateFull,
+    location: {
+      '@type': 'Place',
+      name: item.location,
+      ...(item.coordinates?.lat && item.coordinates?.lng && {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: item.coordinates.lat,
+          longitude: item.coordinates.lng,
+        },
+      }),
+      address: {
+        '@type': 'PostalAddress',
+        ...(locationCity && { addressLocality: locationCity }),
+        ...(locationCountry && { addressCountry: locationCountry }),
+      },
+    },
+  }));
+
+  // Use the first event's location as the primary venue, or fall back to global
+  const primaryVenueName = firstEvent?.location || location || 'Wedding Venue';
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -508,7 +601,14 @@ export function generateWeddingEventSchema({ subdomain, data }: WeddingSiteSEO):
     }),
     location: {
       '@type': 'Place',
-      name: location || 'Wedding Venue',
+      name: primaryVenueName,
+      ...(firstEvent?.coordinates?.lat && firstEvent?.coordinates?.lng && {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: firstEvent.coordinates.lat,
+          longitude: firstEvent.coordinates.lng,
+        },
+      }),
       address: {
         '@type': 'PostalAddress',
         ...(locationCity && { addressLocality: locationCity }),
@@ -520,5 +620,10 @@ export function generateWeddingEventSchema({ subdomain, data }: WeddingSiteSEO):
       name: coupleName,
       url: `https://${subdomain}.wdng.online`,
     },
+    ...(subEvents && subEvents.length > 1 && {
+      subEvent: subEvents,
+    }),
+    isAccessibleForFree: true,
+    inLanguage: data.config.siteLocale || 'en',
   };
 }

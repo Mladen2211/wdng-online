@@ -37,6 +37,10 @@ export interface WeddingGlobal {
   minutesLabel?: string;     // Default: "Min"
   secondsLabel?: string;     // Default: "Sec"
   heroTagline?: string;      // Default: "The Wedding" (for vogue layout)
+  // Couple contact info (shown in footer)
+  contactEmail?: string;
+  contactPhone?: string;
+  contactInstagram?: string;
 }
 
 export interface WeddingData {
@@ -100,6 +104,11 @@ export interface RsvpData {
   subtitle?: string;
   deadline?: string;
   fields: RsvpField[];
+  // Translatable labels for the RSVP form display
+  respondByLabel?: string;    // Default: "Please respond by"
+  submitLabel?: string;       // Default: "Send RSVP"
+  selectOptionLabel?: string; // Default: "Select an option"
+  enterYourLabel?: string;    // Default: "Enter your"
 }
 
 export interface RsvpField {

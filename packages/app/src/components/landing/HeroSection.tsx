@@ -3,19 +3,19 @@ import { Play, Check } from 'lucide-react';
 import type { HeroSectionProps } from './types';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ translations: t, onStartBuilding }) => (
-  <header className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden">
+  <header className="relative pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden">
     {/* Abstract Background Blobs */}
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-rose-100/50 rounded-full blur-[100px] -z-10 opacity-60" />
     <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-amber-50/50 rounded-full blur-[100px] -z-10 opacity-60" />
 
-    <div className="max-w-5xl mx-auto text-center">
+    <div className="max-w-5xl mx-auto text-center animate-fade-in-up">
       <HeroTitle title={t.landing.hero.title} />
 
-      <p className="text-lg md:text-xl text-stone-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+      <p className="text-base sm:text-lg md:text-xl text-stone-500 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
         {t.landing.hero.subtitle}
       </p>
 
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 sm:mb-20">
         <button
           onClick={onStartBuilding}
           className="w-full sm:w-auto px-8 py-4 bg-stone-900 text-white rounded-full font-bold text-lg hover:bg-stone-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
@@ -36,7 +36,7 @@ const HeroTitle: React.FC<{ title: string }> = ({ title }) => {
   const accentWords = words.slice(-2).join(' ');
 
   return (
-    <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-stone-900 leading-[1.1] mb-8 tracking-tight">
+    <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-stone-900 leading-[1.1] mb-6 sm:mb-8 tracking-tight">
       {mainWords} <br />
       <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-amber-500 to-rose-400">
         {accentWords}

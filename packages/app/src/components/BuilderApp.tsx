@@ -36,6 +36,20 @@ const SITE_TRANSLATIONS = {
       openInPhotos: 'Open in Google Photos',
       comingSoonTitle: 'Photo Sharing Coming Soon',
       comingSoonSubtitle: 'The couple is setting up their photo album.'
+    },
+    rsvp: {
+      title: 'Will you attend?',
+      subtitle: 'Please let us know if you can make it.',
+      respondByLabel: 'Please respond by',
+      submitLabel: 'Send RSVP',
+      selectOptionLabel: 'Select an option',
+      enterYourLabel: 'Enter your',
+      fields: [
+        { id: 'name', label: 'Full Name', type: 'text', required: true },
+        { id: 'email', label: 'Email', type: 'email', required: true },
+        { id: 'attendance', label: 'Will you attend?', type: 'select', required: true, options: ['Yes, I will be there!', 'Sorry, I cannot attend'] },
+        { id: 'dietary', label: 'Dietary Requirements', type: 'textarea', required: false }
+      ]
     }
   },
   de: {
@@ -55,6 +69,20 @@ const SITE_TRANSLATIONS = {
       openInPhotos: 'In Google Fotos öffnen',
       comingSoonTitle: 'Foto-Sharing kommt bald',
       comingSoonSubtitle: 'Das Paar richtet gerade ihr Fotoalbum ein.'
+    },
+    rsvp: {
+      title: 'Werden Sie teilnehmen?',
+      subtitle: 'Bitte teilen Sie uns mit, ob Sie kommen können.',
+      respondByLabel: 'Bitte antworten Sie bis',
+      submitLabel: 'RSVP senden',
+      selectOptionLabel: 'Option auswählen',
+      enterYourLabel: 'Geben Sie Ihre/Ihren',
+      fields: [
+        { id: 'name', label: 'Vollständiger Name', type: 'text', required: true },
+        { id: 'email', label: 'E-Mail', type: 'email', required: true },
+        { id: 'attendance', label: 'Werden Sie teilnehmen?', type: 'select', required: true, options: ['Ja, ich werde da sein!', 'Leider kann ich nicht kommen'] },
+        { id: 'dietary', label: 'Ernährungsanforderungen', type: 'textarea', required: false }
+      ]
     }
   },
   hr: {
@@ -74,6 +102,20 @@ const SITE_TRANSLATIONS = {
       openInPhotos: 'Otvori u Google Photos',
       comingSoonTitle: 'Dijeljenje slika uskoro',
       comingSoonSubtitle: 'Mladenci trenutno postavljaju svoj album.'
+    },
+    rsvp: {
+      title: 'Hoćete li doći?',
+      subtitle: 'Molimo javite nam možete li doći.',
+      respondByLabel: 'Molimo odgovorite do',
+      submitLabel: 'Pošalji RSVP',
+      selectOptionLabel: 'Odaberite opciju',
+      enterYourLabel: 'Unesite vaš/vašu',
+      fields: [
+        { id: 'name', label: 'Ime i prezime', type: 'text', required: true },
+        { id: 'email', label: 'E-pošta', type: 'email', required: true },
+        { id: 'attendance', label: 'Hoćete li doći?', type: 'select', required: true, options: ['Da, bit ću tamo!', 'Nažalost, ne mogu doći'] },
+        { id: 'dietary', label: 'Prehrambeni zahtjevi', type: 'textarea', required: false }
+      ]
     }
   }
 };
@@ -313,6 +355,29 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
             }
           };
         }
+
+        if (section.type === 'rsvp') {
+          updatedSection = {
+            ...updatedSection,
+            data: {
+              ...section.data,
+              title: translations.rsvp.title,
+              subtitle: translations.rsvp.subtitle,
+              respondByLabel: translations.rsvp.respondByLabel,
+              submitLabel: translations.rsvp.submitLabel,
+              selectOptionLabel: translations.rsvp.selectOptionLabel,
+              enterYourLabel: translations.rsvp.enterYourLabel,
+              fields: translations.rsvp.fields.map((field: { id: string; label: string; type: string; required: boolean; options?: string[] }) => ({
+                ...field,
+                // Preserve user customizations for existing field IDs
+                ...((section.data as { fields?: Array<{ id: string }> }).fields?.find((f: { id: string }) => f.id === field.id) 
+                  ? { label: field.label, options: field.options } 
+                  : {})
+              }))
+            }
+          };
+        }
+
         return updatedSection;
       })
     }));
@@ -749,6 +814,17 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
                     options={HERO_POSITIONS} 
                     onChange={(v) => updateGlobal('heroImagePosition', v)} 
                  />
+               </div>
+
+               {/* Contact Info */}
+               <div className="pt-4 border-t border-stone-100 space-y-4">
+                 <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center gap-2">
+                   <Mail size={12} /> Contact Information
+                 </h3>
+                 <p className="text-[10px] text-stone-400">Optional — shown in your wedding site footer so guests can reach you.</p>
+                 <InputField label="Email" value={data.global.contactEmail || ''} onChange={(v) => updateGlobal('contactEmail', v)} />
+                 <InputField label="Phone" value={data.global.contactPhone || ''} onChange={(v) => updateGlobal('contactPhone', v)} />
+                 <InputField label="Instagram" value={data.global.contactInstagram || ''} onChange={(v) => updateGlobal('contactInstagram', v)} />
                </div>
             </div>
           </section>
@@ -1409,6 +1485,10 @@ const getDefaultSectionData = (type: string) => {
       title: 'Will you attend?', 
       subtitle: 'Please let us know if you can make it.',
       deadline: '',
+      respondByLabel: 'Please respond by',
+      submitLabel: 'Send RSVP',
+      selectOptionLabel: 'Select an option',
+      enterYourLabel: 'Enter your',
       fields: [
         { id: 'name', label: 'Full Name', type: 'text', required: true },
         { id: 'email', label: 'Email', type: 'email', required: true },

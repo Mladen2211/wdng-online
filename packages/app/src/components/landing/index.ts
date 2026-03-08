@@ -12,3 +12,4 @@ export { FeaturesSection } from './FeaturesSection';
 export { HowItWorksSection } from './HowItWorksSection';
 export { ThemesSection } from './ThemesSection';
 export { PricingSection } from './PricingSection';
+export { useScrollAnimation } from './useScrollAnimation';

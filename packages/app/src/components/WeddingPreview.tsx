@@ -167,12 +167,63 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
       </div>
 
       {/* 3. FOOTER */}
-      <footer className="bg-stone-900 text-white py-20 text-center">
-        <h2 className={`font-serif text-3xl ${theme.gradientText} mb-6`}>{displayInitials}</h2>
-        <div className="flex justify-center gap-6 mb-8 text-xs font-bold uppercase tracking-widest text-stone-500">
-           {global.footerLinks.map(l => <span key={l} className="hover:text-white cursor-pointer transition-colors">{l}</span>)}
+      <footer className="bg-stone-900 text-white">
+        {/* Couple Section */}
+        <div className="py-16 text-center border-b border-stone-800">
+          <h2 className={`font-serif text-3xl ${theme.gradientText} mb-3`}>{global.bride} & {global.groom}</h2>
+          <p className="text-stone-400 text-sm">{global.dateFull} {global.locationCity ? `• ${global.locationCity}` : ''}</p>
+
+          {/* Couple Contact Info */}
+          {(global.contactEmail || global.contactPhone || global.contactInstagram) && (
+            <div className="flex flex-wrap justify-center gap-4 mt-6">
+              {global.contactEmail && (
+                <a href={`mailto:${global.contactEmail}`} className="flex items-center gap-2 text-xs text-stone-400 hover:text-white transition-colors">
+                  <Mail size={14} />
+                  {global.contactEmail}
+                </a>
+              )}
+              {global.contactPhone && (
+                <a href={`tel:${global.contactPhone}`} className="flex items-center gap-2 text-xs text-stone-400 hover:text-white transition-colors">
+                  <Calendar size={14} />
+                  {global.contactPhone}
+                </a>
+              )}
+              {global.contactInstagram && (
+                <a
+                  href={`https://instagram.com/${global.contactInstagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-stone-400 hover:text-white transition-colors"
+                >
+                  <Camera size={14} />
+                  {global.contactInstagram.startsWith('@') ? global.contactInstagram : `@${global.contactInstagram}`}
+                </a>
+              )}
+            </div>
+          )}
+
+          {global.footerLinks.length > 0 && (
+            <div className="flex justify-center gap-6 mt-6 text-xs font-bold uppercase tracking-widest text-stone-500">
+              {global.footerLinks.map(l => <span key={l} className="hover:text-white cursor-pointer transition-colors">{l}</span>)}
+            </div>
+          )}
         </div>
-        <p className="text-stone-700 text-[10px] uppercase tracking-widest">{global.copyright}</p>
+
+        {/* Platform Attribution */}
+        <div className="py-6 px-6">
+          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-stone-600 text-[10px] uppercase tracking-widest">{global.copyright}</p>
+            <a
+              href="https://wdng.online"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stone-600 hover:text-stone-400 text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5"
+            >
+              <Heart size={10} className="text-rose-500/60" />
+              Powered by wdng.online
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );
@@ -465,6 +516,12 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
   }
 
   if (type === 'rsvp') {
+    // Use translatable labels from data, with English fallbacks
+    const respondByLabel = data.respondByLabel || 'Please respond by';
+    const submitLabel = data.submitLabel || 'Send RSVP';
+    const selectOptionLabel = data.selectOptionLabel || 'Select an option';
+    const enterYourLabel = data.enterYourLabel || 'Enter your';
+
     return (
       <section id={`section-${sectionIndex}`} className={`py-20 px-6 ${theme.bg}`}>
         <div className="max-w-xl mx-auto">
@@ -476,7 +533,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
             {data.subtitle && <p className={`${theme.textMuted}`}>{data.subtitle}</p>}
             {data.deadline && (
               <p className={`text-sm ${theme.accent} mt-2`}>
-                Please respond by {data.deadline}
+                {respondByLabel} {data.deadline}
               </p>
             )}
           </div>
@@ -491,13 +548,13 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                 </label>
                 {field.type === 'textarea' ? (
                   <textarea
-                    placeholder={`Enter your ${field.label.toLowerCase()}...`}
+                    placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
                     rows={3}
                     className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none resize-none`}
                   />
                 ) : field.type === 'select' ? (
                   <select className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none bg-white`}>
-                    <option value="">Select an option</option>
+                    <option value="">{selectOptionLabel}</option>
                     {field.options?.map((opt: string, optIdx: number) => (
                       <option key={optIdx} value={opt}>{opt}</option>
                     ))}
@@ -505,7 +562,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                 ) : (
                   <input
                     type={field.type}
-                    placeholder={`Enter your ${field.label.toLowerCase()}...`}
+                    placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
                     className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none`}
                   />
                 )}
@@ -516,7 +573,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
               type="submit"
               className={`w-full py-4 rounded-xl font-bold text-lg ${theme.button} transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5`}
             >
-              Send RSVP
+              {submitLabel}
             </button>
           </form>
         </div>

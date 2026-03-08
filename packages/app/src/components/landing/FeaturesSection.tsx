@@ -1,6 +1,9 @@
+'use client';
+
 import { Palette, Check, Camera, Smartphone, Globe, Zap } from 'lucide-react';
 import { FeatureCard } from './FeatureCard';
 import { SectionHeader } from './SectionHeader';
+import { useScrollAnimation } from './useScrollAnimation';
 import type { FeaturesSectionProps } from './types';
 
 // Feature configuration - makes it easy to add/remove features
@@ -30,6 +33,8 @@ const FEATURE_DEFAULTS: Record<string, { title: string; description: string }> =
 };
 
 export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ translations: t }) => {
+  const { ref, isVisible } = useScrollAnimation();
+
   const getFeatureData = (key: FeatureKey) => {
     const feature = t.landing.features[key as keyof typeof t.landing.features];
     const defaults = FEATURE_DEFAULTS[key];
@@ -46,22 +51,31 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ translations: 
 
   return (
     <section id="features" className="py-24 px-6 bg-white">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto" ref={ref}>
         <SectionHeader
           title={t.landing.features.title}
           subtitle={t.landing.features.subtitle}
         />
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {FEATURE_ORDER.map((key) => {
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          {FEATURE_ORDER.map((key, index) => {
             const { title, description } = getFeatureData(key);
             return (
-              <FeatureCard
+              <div
                 key={key}
-                icon={FEATURE_ICONS[key]}
-                title={title}
-                description={description}
-              />
+                className={`transition-all duration-700 ${
+                  isVisible
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-8'
+                }`}
+                style={{ transitionDelay: `${index * 100}ms` }}
+              >
+                <FeatureCard
+                  icon={FEATURE_ICONS[key]}
+                  title={title}
+                  description={description}
+                />
+              </div>
             );
           })}
         </div>
