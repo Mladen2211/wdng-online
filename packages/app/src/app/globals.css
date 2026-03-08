@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "leaflet/dist/leaflet.css";
 @import "tailwindcss";
 
@@ -15,12 +14,7 @@
   --font-serif: var(--font-crimson-text);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+
 
 body {
   background: var(--background);
@@ -30,6 +24,12 @@ body {
 
 .font-serif {
   font-family: var(--font-crimson-text), 'Georgia', serif;
+}
+
+/* Content visibility for below-fold sections */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }
 
 /* Smooth scrolling */

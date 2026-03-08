@@ -50,7 +50,7 @@ export const ThemesSection: React.FC<ThemesSectionProps> = ({ translations: t })
   const themes = t.landing.themes;
 
   return (
-    <section id="themes" className="py-24 sm:py-32 px-6 bg-gradient-to-b from-[#FAFAF9] to-white overflow-hidden">
+    <section id="themes" className="cv-auto py-24 sm:py-32 px-6 bg-gradient-to-b from-[#FAFAF9] to-white overflow-hidden">
       <div className="max-w-6xl mx-auto" ref={ref}>
         <SectionHeader
           title={themes?.title || 'Themes that stun'}

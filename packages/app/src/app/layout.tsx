@@ -14,17 +14,20 @@ export const dynamic = 'force-dynamic';
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const crimsonText = Crimson_Text({
   variable: "--font-crimson-text",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = generateSEOMetadata();
@@ -40,11 +43,15 @@ export default function RootLayout({
       <html lang="en">
         <head>
           {/* Performance: Preconnect to critical third-party domains */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link rel="preconnect" href="https://images.unsplash.com" />
-          <link rel="preconnect" href="https://www.googletagmanager.com" />
+          <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
           <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+          {/* Consent mode defaults — must run before any GTM/GA scripts */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{'ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied','analytics_storage':'denied','functionality_storage':'denied','personalization_storage':'denied','security_storage':'granted','wait_for_update':500});`,
+            }}
+          />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${crimsonText.variable} antialiased font-sans`}
@@ -77,26 +84,8 @@ export default function RootLayout({
               gtag('config', 'G-CNFNPN9Y5H');
             `}
           </Script>
-          <Script id="consent-mode-defaults" strategy="beforeInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('consent', 'default', {
-                'ad_storage': 'denied',
-                'ad_user_data': 'denied',
-                'ad_personalization': 'denied',
-                'analytics_storage': 'denied',
-                'functionality_storage': 'denied',
-                'personalization_storage': 'denied',
-                'security_storage': 'granted',
-                'wait_for_update': 500
-              });
-            `}
-          </Script>
           <CookieConsent />
-          <main id="main-content">
-            {children}
-          </main>
+          {children}
         </body>
       </html>
     </ClerkProvider>

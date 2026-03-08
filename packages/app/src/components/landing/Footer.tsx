@@ -14,7 +14,7 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
             <Logo size="sm" />
             <span className="ml-3 font-serif text-xl text-white">wdng.online</span>
           </Link>
-          <p className="text-stone-400 text-sm leading-relaxed">
+          <p className="text-stone-300 text-sm leading-relaxed">
             Beautiful wedding websites, effortlessly created. Share your love story with the world.
           </p>
         </div>
@@ -62,10 +62,10 @@ export const Footer: React.FC<FooterProps> = ({ locale, translations: t }) => (
 
       {/* Bottom section */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8">
-        <p className="text-stone-400 text-xs">
+        <p className="text-stone-300 text-xs">
           {t.landing.footer?.copyright || '© 2026 wdng online Inc. All rights reserved.'}
         </p>
-        <p className="text-stone-400 text-xs flex items-center gap-1">
+        <p className="text-stone-300 text-xs flex items-center gap-1">
           Made with <Heart size={12} className="text-rose-400 fill-rose-400" /> for couples everywhere
         </p>
       </div>

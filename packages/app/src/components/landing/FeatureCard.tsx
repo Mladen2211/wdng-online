@@ -6,7 +6,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, descripti
       {icon}
     </div>
     <h3 className="font-bold text-lg sm:text-xl text-stone-800 mb-2 sm:mb-3">{title}</h3>
-    <p className="text-stone-500 leading-relaxed text-sm">{description}</p>
+    <p className="text-stone-600 leading-relaxed text-sm">{description}</p>
   </div>
 );
 

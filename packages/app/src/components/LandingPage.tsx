@@ -41,6 +41,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ locale = defaultLocale }) => 
         onStartBuilding={handleStartBuilding}
       />
 
+      <main>
       <HeroSection 
         translations={t} 
         onStartBuilding={handleStartBuilding} 
@@ -59,6 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ locale = defaultLocale }) => 
         translations={t} 
         onStartBuilding={handleStartBuilding} 
       />
+      </main>
 
       <Footer locale={locale} translations={t} />
     </div>

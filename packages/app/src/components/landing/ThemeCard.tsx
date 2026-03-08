@@ -10,9 +10,10 @@ export const ThemeCard: React.FC<ThemeCardProps> = ({ title, image, accent, feat
         <Image
           src={image}
           fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
-          alt={title}
-          unoptimized
+          alt={`${title} wedding theme preview`}
+          loading="lazy"
         />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />

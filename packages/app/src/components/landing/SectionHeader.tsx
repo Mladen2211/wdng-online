@@ -14,7 +14,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
     )}
     <h2 className="font-serif text-4xl md:text-5xl text-stone-900 mb-4">{title}</h2>
     {subtitle && (
-      <p className="text-stone-500 text-lg max-w-xl mx-auto">{subtitle}</p>
+      <p className="text-stone-600 text-lg max-w-xl mx-auto">{subtitle}</p>
     )}
   </div>
 );

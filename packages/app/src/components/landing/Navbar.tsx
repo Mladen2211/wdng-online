@@ -94,8 +94,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-stone-600 hover:text-stone-900 transition-colors"
-            aria-label="Toggle menu"
+            className="md:hidden p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-600 hover:text-stone-900 transition-colors"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>

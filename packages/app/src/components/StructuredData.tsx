@@ -1,6 +1,3 @@
-'use client';
-
-import Script from 'next/script';
 import { generateCombinedSchema } from '@/lib/seo';
 
 interface StructuredDataProps {
@@ -13,11 +10,9 @@ export function StructuredData({ schemas }: StructuredDataProps) {
   return (
     <>
       {allSchemas.map((schema, index) => (
-        <Script
+        <script
           key={`schema-${index}`}
-          id={`structured-data-${index}`}
           type="application/ld+json"
-          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(schema),
           }}

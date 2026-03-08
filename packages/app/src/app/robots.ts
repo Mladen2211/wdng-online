@@ -15,38 +15,9 @@ export default function robots(): MetadataRoute.Robots {
           '/builder/',
           '/*/builder/',
           '/_next/',
-          '/private/',
-        ],
-      },
-      {
-        userAgent: 'Googlebot',
-        allow: '/',
-        disallow: [
-          '/api/',
-          '/dashboard/',
-          '/*/dashboard/',
-          '/builder/',
-          '/*/builder/',
-        ],
-      },
-      {
-        userAgent: 'Googlebot-Image',
-        allow: '/',
-      },
-      {
-        userAgent: 'Bingbot',
-        allow: '/',
-        disallow: [
-          '/api/',
-          '/dashboard/',
-          '/*/dashboard/',
-          '/builder/',
-          '/*/builder/',
         ],
       },
     ],
-    sitemap: [
-      `${siteUrl}/sitemap.xml`,
-    ],
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

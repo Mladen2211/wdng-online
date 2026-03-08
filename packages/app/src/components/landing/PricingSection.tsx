@@ -13,7 +13,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-24 sm:py-32 px-6 bg-white text-center" id="pricing">
+    <section className="cv-auto py-24 sm:py-32 px-6 bg-white text-center" id="pricing">
       <div
         className={`max-w-3xl mx-auto transition-all duration-700 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -24,7 +24,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
           {t.landing.cta.title}
         </h2>
         
-        <p className="text-lg text-stone-500 mb-10">
+        <p className="text-lg text-stone-600 mb-10">
           Create your dream wedding website today. Free for everyone.
         </p>
 

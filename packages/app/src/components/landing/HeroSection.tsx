@@ -1,17 +1,17 @@
 import Image from 'next/image';
-import { Play, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import type { HeroSectionProps } from './types';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ translations: t, onStartBuilding }) => (
   <header className="relative pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden">
     {/* Abstract Background Blobs */}
-    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-rose-100/50 rounded-full blur-[100px] -z-10 opacity-60" />
-    <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-amber-50/50 rounded-full blur-[100px] -z-10 opacity-60" />
+    <div aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-rose-100/50 rounded-full blur-[100px] -z-10 opacity-60" />
+    <div aria-hidden="true" className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-amber-50/50 rounded-full blur-[100px] -z-10 opacity-60" />
 
-    <div className="max-w-5xl mx-auto text-center animate-fade-in-up">
+    <div className="max-w-5xl mx-auto text-center">
       <HeroTitle title={t.landing.hero.title} />
 
-      <p className="text-base sm:text-lg md:text-xl text-stone-500 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
+      <p className="text-base sm:text-lg md:text-xl text-stone-600 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
         {t.landing.hero.subtitle}
       </p>
 
@@ -113,10 +113,11 @@ const MockupPreview: React.FC = () => (
         <Image
           src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
           fill
-          sizes="(max-width: 768px) 50vw, 33vw"
+          sizes="(max-width: 768px) 40vw, 25vw"
           className="object-cover opacity-90"
           alt="Wedding website builder preview showing a couple's wedding site"
           priority
+          fetchPriority="high"
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white">

@@ -50,7 +50,7 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ translations: 
   };
 
   return (
-    <section id="features" className="py-24 px-6 bg-white">
+    <section id="features" className="cv-auto py-24 px-6 bg-white">
       <div className="max-w-6xl mx-auto" ref={ref}>
         <SectionHeader
           title={t.landing.features.title}
