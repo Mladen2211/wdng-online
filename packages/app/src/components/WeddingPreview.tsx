@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Camera, Star, MapPin, Gift, Cake, Wine, Car, Plane, Home, UtensilsCrossed, Church } from 'lucide-react';
+import { Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Camera, Star, MapPin, Gift, Cake, Wine, Car, Plane, Home, UtensilsCrossed, Church, Mail, Phone, Instagram } from 'lucide-react';
 import { WeddingData } from '@/lib/types';
 import { THEMES } from '@/lib/constants';
 import GuestUploader from './GuestUploader';
@@ -184,7 +184,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
               )}
               {global.contactPhone && (
                 <a href={`tel:${global.contactPhone}`} className="flex items-center gap-2 text-xs text-stone-400 hover:text-white transition-colors">
-                  <Calendar size={14} />
+                  <Phone size={14} />
                   {global.contactPhone}
                 </a>
               )}
@@ -195,7 +195,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs text-stone-400 hover:text-white transition-colors"
                 >
-                  <Camera size={14} />
+                  <Instagram size={14} />
                   {global.contactInstagram.startsWith('@') ? global.contactInstagram : `@${global.contactInstagram}`}
                 </a>
               )}
