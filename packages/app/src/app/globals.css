@@ -26,12 +26,6 @@ body {
   font-family: var(--font-crimson-text), 'Georgia', serif;
 }
 
-/* Content visibility for below-fold sections */
-.cv-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 600px;
-}
-
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;

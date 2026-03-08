@@ -23,7 +23,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
   const howItWorks = t.landing.howItWorks;
 
   return (
-    <section className="cv-auto py-24 px-6 bg-stone-900 text-white">
+    <section className="py-24 px-6 bg-stone-900 text-white">
       <div className="max-w-5xl mx-auto" ref={ref}>
         <div className="flex flex-col md:flex-row gap-12 lg:gap-16 items-center">
           <div className={`md:w-1/2 transition-all duration-700 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
@@ -68,7 +68,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
             <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-amber-500 rounded-2xl blur-3xl opacity-20" />
             <div className="relative aspect-[4/3] rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
               <Image
-                src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=800&auto=format&fit=crop"
+                src="/images/how-it-works.webp"
                 alt="Wedding website builder process - choose theme, add details, publish"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"

@@ -111,13 +111,12 @@ const MockupPreview: React.FC = () => (
     <div className="w-[80%] h-[90%] bg-white rounded-xl shadow-lg overflow-hidden relative">
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
+          src="/images/hero.webp"
           fill
           sizes="(max-width: 768px) 40vw, 25vw"
           className="object-cover opacity-90"
           alt="Wedding website builder preview showing a couple's wedding site"
           priority
-          fetchPriority="high"
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white">
@@ -134,8 +133,7 @@ const MockupPreview: React.FC = () => (
 
 const FloatingBadge: React.FC = () => (
   <div
-    className="absolute -right-12 top-1/4 bg-white p-4 rounded-2xl shadow-xl border border-stone-100 animate-bounce hidden lg:block"
-    style={{ animationDuration: '3s' }}
+    className="absolute -right-12 top-1/4 bg-white p-4 rounded-2xl shadow-xl border border-stone-100 hidden lg:block"
   >
     <div className="flex items-center gap-3">
       <div className="p-2 bg-green-100 text-green-600 rounded-lg">

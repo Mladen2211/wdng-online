@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       className={`fixed w-full z-50 transition-all duration-300 ${
         scrolled
           ? 'bg-white/80 backdrop-blur-md border-b border-stone-100 py-3 sm:py-4'
-          : 'bg-transparent py-4 sm:py-6'
+          : 'bg-transparent py-3 sm:py-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">

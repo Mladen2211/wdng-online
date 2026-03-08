@@ -43,7 +43,7 @@ export default function RootLayout({
       <html lang="en">
         <head>
           {/* Performance: Preconnect to critical third-party domains */}
-          <link rel="preconnect" href="https://images.unsplash.com" />
+
           <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
           <link rel="dns-prefetch" href="https://www.google-analytics.com" />
           {/* Consent mode defaults — must run before any GTM/GA scripts */}
