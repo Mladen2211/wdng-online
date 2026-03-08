@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Calendar, Clock, Menu, X, Music, Share2, UploadCloud, Heart, ArrowRight, Camera, Star, MapPin, Gift, Cake, Wine, Car, Plane, Home, UtensilsCrossed, Church, Mail, Phone, Instagram } from 'lucide-react';
 import { WeddingData } from '@/lib/types';
 import { THEMES } from '@/lib/constants';
@@ -116,7 +117,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
       `}</style>
 
       {/* Dynamic Nav */}
-      <nav className={`sticky top-0 w-full z-50 transition-all duration-300 ${scrolled ? `bg-white/95 backdrop-blur-md border-b ${theme.border} py-3 shadow-sm` : layout === 'immersive' ? 'bg-black/20 backdrop-blur-sm py-6' : `bg-white/90 backdrop-blur-sm border-b ${theme.border} py-6`}`}>
+      <nav className={`sticky top-0 w-full z-50 transition-all duration-300 ${scrolled ? `bg-white/95 backdrop-blur-md border-b ${theme.border} py-4 shadow-sm` : layout === 'immersive' ? 'bg-black/20 backdrop-blur-sm py-4' : `bg-white/90 backdrop-blur-sm border-b ${theme.border} py-4`}`}>
         <div className="px-6 flex justify-between items-center">
           <span className={`font-serif text-xl font-bold tracking-wide ${scrolled ? theme.gradientText : layout === 'immersive' ? 'text-white drop-shadow-lg' : theme.gradientText}`}>{displayInitials}</span>
           {/* Desktop Navigation */}
@@ -132,7 +133,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
             ))}
           </div>
           {/* Mobile Menu Button */}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`p-3 transition-colors rounded-lg md:hidden ${scrolled ? theme.text : layout === 'immersive' ? 'text-white drop-shadow-lg hover:bg-white/20' : theme.text} hover:bg-stone-100`}>
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={isMenuOpen} className={`p-3 min-w-[44px] min-h-[44px] transition-colors rounded-lg md:hidden ${scrolled ? theme.text : layout === 'immersive' ? 'text-white drop-shadow-lg hover:bg-white/20' : theme.text} hover:bg-stone-100`}>
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -157,7 +158,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
       <HeroRenderer layout={layout} theme={theme} global={global} timeLeft={timeLeft} />
 
       {/* 2. DYNAMIC SECTIONS LOOP */}
-      <div className="flex flex-col">
+      <main className="flex flex-col">
         {sections.map((section, index) => (
           <SectionRenderer 
             key={section.id} 
@@ -171,10 +172,10 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
             onUploadComplete={handleUploadComplete}
           />
         ))}
-      </div>
+      </main>
 
       {/* 3. FOOTER */}
-      <footer className="bg-stone-900 text-white">
+      <footer role="contentinfo" className="bg-stone-900 text-white">
         {/* Couple Section */}
         <div className="py-16 text-center border-b border-stone-800">
           <h2 className={`font-serif text-3xl ${theme.gradientText} mb-3`}>{global.bride} & {global.groom}</h2>
@@ -266,7 +267,7 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
          </div>
          <div className="relative w-full h-[50vh] overflow-hidden mb-6 group">
             {global.heroImage ? (
-              <img src={global.heroImage} className={`w-full h-full object-cover ${imagePosition} grayscale group-hover:grayscale-0 transition-all duration-1000`} alt="Hero" />
+              <Image src={global.heroImage} fill sizes="100vw" className={`object-cover ${imagePosition} grayscale group-hover:grayscale-0 transition-all duration-1000`} alt={`${global.bride || ''} & ${global.groom || ''} wedding`} priority />
             ) : (
               <div className="w-full h-full bg-stone-200 flex items-center justify-center">
                 <span className="text-stone-400">No image selected</span>
@@ -291,8 +292,8 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
          <div className={`inline-block px-3 py-1 rounded-full border ${theme.border} text-[10px] font-bold uppercase tracking-widest mb-6 text-stone-400`}>{global.dateFull} • {global.locationCity}</div>
          <h1 className={`font-serif text-6xl md:text-8xl ${theme.text} mb-8 leading-none`}>{global.bride} <br/><span className={`${theme.accent} italic`}>&</span> {global.groom}</h1>
          <div className="relative w-full max-w-lg mx-auto mb-10">
-            <div className="aspect-[3/4] rounded-t-[10rem] rounded-b-[2rem] overflow-hidden shadow-2xl border-4 border-white">
-              <img src={global.heroImage} className={`w-full h-full object-cover ${imagePosition}`} alt="Hero" />
+            <div className="aspect-[3/4] rounded-t-[10rem] rounded-b-[2rem] overflow-hidden shadow-2xl border-4 border-white relative">
+              <Image src={global.heroImage} fill sizes="(max-width: 640px) 100vw, 512px" className={`object-cover ${imagePosition}`} alt={`${global.bride || ''} & ${global.groom || ''} wedding`} priority />
             </div>
             <div className="absolute -bottom-5 -left-5 bg-white p-4 rounded-full shadow-lg z-10"><Heart className={theme.accent} fill="currentColor" size={24}/></div>
          </div>
@@ -309,7 +310,7 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
   return (
     <header className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-stone-900">
       <div className="absolute inset-0 z-0">
-        <img src={global.heroImage} className={`w-full h-full object-cover ${imagePosition} opacity-60`} alt="Hero" />
+        <Image src={global.heroImage} fill sizes="100vw" className={`object-cover ${imagePosition} opacity-60`} alt={`${global.bride || ''} & ${global.groom || ''} wedding`} priority />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60"></div>
       </div>
       <div className="relative z-10 text-center px-4 w-full max-w-4xl animate-fade-in-up">
@@ -451,7 +452,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                </div>
                <div className="relative h-64 md:h-auto">
                   {data.image ? (
-                    <img src={data.image} className="w-full h-full object-cover" alt="Gallery"/>
+                    <Image src={data.image} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" alt="Wedding photo gallery" />
                   ) : (
                     <div className="w-full h-full bg-stone-200 flex items-center justify-center">
                       <span className="text-stone-400">No image</span>
@@ -553,18 +554,19 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {data.fields?.map((field: any, idx: number) => (
               <div key={idx} className="mb-6 last:mb-0">
-                <label className={`block text-sm font-medium ${theme.text} mb-2`}>
+                <label htmlFor={`rsvp-field-${idx}`} className={`block text-sm font-medium ${theme.text} mb-2`}>
                   {field.label}
                   {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 {field.type === 'textarea' ? (
                   <textarea
+                    id={`rsvp-field-${idx}`}
                     placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
                     rows={3}
                     className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none resize-none`}
                   />
                 ) : field.type === 'select' ? (
-                  <select className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none bg-white`}>
+                  <select id={`rsvp-field-${idx}`} className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none bg-white`}>
                     <option value="">{selectOptionLabel}</option>
                     {field.options?.map((opt: string, optIdx: number) => (
                       <option key={optIdx} value={opt}>{opt}</option>
@@ -572,6 +574,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                   </select>
                 ) : (
                   <input
+                    id={`rsvp-field-${idx}`}
                     type={field.type}
                     placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
                     className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none`}

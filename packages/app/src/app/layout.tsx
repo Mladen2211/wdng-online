@@ -42,8 +42,9 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
+          {/* Cookie Consent Manager Stylesheet */}
+          <link rel="stylesheet" href="/silktide-consent-manager.css" />
           {/* Performance: Preconnect to critical third-party domains */}
-
           <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
           <link rel="dns-prefetch" href="https://www.google-analytics.com" />
           {/* Consent mode defaults — must run before any GTM/GA scripts */}
