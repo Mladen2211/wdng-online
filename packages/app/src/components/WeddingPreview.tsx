@@ -167,6 +167,8 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
             sectionIndex={index} 
             isPreview={isPreview}
             siteInfo={siteInfo}
+            galleryRefreshKey={galleryRefreshKey}
+            onUploadComplete={handleUploadComplete}
           />
         ))}
       </div>
@@ -338,9 +340,11 @@ interface SectionRendererProps {
   sectionIndex: number;
   isPreview: boolean;
   siteInfo?: SiteInfo;
+  galleryRefreshKey?: number;
+  onUploadComplete?: () => void;
 }
 
-const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layout, sectionIndex, isPreview, siteInfo }) => {
+const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layout, sectionIndex, isPreview, siteInfo, galleryRefreshKey, onUploadComplete }) => {
   const { type, data } = section;
 
   const handleLocationClick = (item: any) => {
@@ -463,7 +467,7 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                   albumId={data.albumId!}
                   ownerClerkId={siteInfo.ownerClerkId!}
                   siteId={siteInfo.siteId}
-                  onUploadComplete={handleUploadComplete}
+                  onUploadComplete={onUploadComplete}
                 />
               </div>
             )}
