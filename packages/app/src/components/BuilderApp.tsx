@@ -367,8 +367,12 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
               submitLabel: translations.rsvp.submitLabel,
               selectOptionLabel: translations.rsvp.selectOptionLabel,
               enterYourLabel: translations.rsvp.enterYourLabel,
-              fields: translations.rsvp.fields.map((field: { id: string; label: string; type: 'text' | 'email' | 'select' | 'textarea'; required: boolean; options?: string[] }) => ({
-                ...field,
+              fields: translations.rsvp.fields.map((field) => ({
+                id: field.id,
+                label: field.label,
+                type: field.type as 'text' | 'email' | 'select' | 'textarea',
+                required: field.required,
+                options: field.options,
                 // Preserve user customizations for existing field IDs
                 ...((section.data as { fields?: Array<{ id: string }> }).fields?.find((f: { id: string }) => f.id === field.id) 
                   ? { label: field.label, options: field.options } 
