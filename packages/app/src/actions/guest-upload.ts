@@ -1,6 +1,6 @@
 'use server';
 
-import { clerkClient } from "@clerk/nextjs/server";
+import { getGoogleToken, hasAppendOnly, PHOTOS_APPENDONLY } from "@/lib/google-photos-auth";
 
 interface UploadResult {
   success: boolean;
@@ -8,20 +8,7 @@ interface UploadResult {
   error?: string;
 }
 
-/**
- * Get Google OAuth token for a specific user (the album owner)
- * This is used to upload photos on behalf of guests using the couple's credentials
- */
-async function getTokenForUser(clerkUserId: string): Promise<string | null> {
-  try {
-    const client = await clerkClient();
-    const response = await client.users.getUserOauthAccessToken(clerkUserId, "google");
-    return response.data[0]?.token || null;
-  } catch (error) {
-    console.error("Failed to get token for user:", error);
-    return null;
-  }
-}
+// Token retrieval + scope helpers live in @/lib/google-photos-auth
 
 /**
  * Upload a photo to Google Photos album
@@ -38,15 +25,26 @@ export async function uploadPhoto(
   albumId: string,
   ownerClerkId: string
 ): Promise<UploadResult> {
-  // Get the album owner's Google token
-  const token = await getTokenForUser(ownerClerkId);
+  // Get the album owner's Google token and validate upload scope
+  const authResult = await getGoogleToken(ownerClerkId);
   
-  if (!token) {
+  if (!authResult.token) {
     return { 
       success: false, 
-      error: "Unable to authenticate with Google Photos. The album owner may need to reconnect their account." 
+      error: authResult.error || "Unable to authenticate with Google Photos. The album owner may need to reconnect their account." 
     };
   }
+
+  if (!hasAppendOnly(authResult.scopes)) {
+    return {
+      success: false,
+      error:
+        `Missing Google Photos upload permission: ${PHOTOS_APPENDONLY}. ` +
+        "The album owner needs to reconnect their Google account after the scopes have been updated.",
+    };
+  }
+
+  const token = authResult.token;
 
   try {
     // Step 1: Upload raw bytes to get an upload token

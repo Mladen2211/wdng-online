@@ -1,6 +1,6 @@
 'use server';
 
-import { clerkClient } from "@clerk/nextjs/server";
+import { getGoogleToken, hasReadonlyAppCreated, PHOTOS_READONLY_APP_CREATED } from "@/lib/google-photos-auth";
 
 export interface GalleryPhoto {
   id: string;
@@ -18,19 +18,7 @@ export interface GalleryResult {
   error?: string;
 }
 
-/**
- * Get Google OAuth token for a specific user (the album owner)
- */
-async function getTokenForUser(clerkUserId: string): Promise<string | null> {
-  try {
-    const client = await clerkClient();
-    const response = await client.users.getUserOauthAccessToken(clerkUserId, "google");
-    return response.data[0]?.token || null;
-  } catch (error) {
-    console.error("Failed to get token for user:", error);
-    return null;
-  }
-}
+// Token retrieval + scope helpers live in @/lib/google-photos-auth
 
 /**
  * Fetch photos from a Google Photos album
@@ -47,15 +35,27 @@ export async function getWeddingGallery(
   pageToken?: string,
   pageSize: number = 50
 ): Promise<GalleryResult> {
-  const token = await getTokenForUser(ownerClerkId);
+  const authResult = await getGoogleToken(ownerClerkId);
   
-  if (!token) {
+  if (!authResult.token) {
     return { 
       success: false, 
       photos: [],
-      error: "Unable to load gallery. Please try again later." 
+      error: authResult.error || "Unable to load gallery. Please try again later." 
     };
   }
+
+  if (!hasReadonlyAppCreated(authResult.scopes)) {
+    return {
+      success: false,
+      photos: [],
+      error:
+        `Missing Google Photos read permission: ${PHOTOS_READONLY_APP_CREATED}. ` +
+        "The album owner needs to reconnect their Google account after the scopes have been updated.",
+    };
+  }
+
+  const token = authResult.token;
 
   try {
     const response = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:search', {

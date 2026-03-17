@@ -1,6 +1,7 @@
 'use server';
 
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
+import { getGoogleToken, hasAppendOnly } from "@/lib/google-photos-auth";
 
 export interface GoogleAlbum {
   id: string;
@@ -19,40 +20,7 @@ export interface CreateAlbumResult {
   error?: string;
 }
 
-/**
- * Get Google OAuth token for the current user
- */
-async function getGoogleToken(userId: string): Promise<{ token: string | null; error?: string }> {
-  try {
-    const client = await clerkClient();
-    const response = await client.users.getUserOauthAccessToken(userId, "google");
-    
-    if (!response.data || response.data.length === 0) {
-      return { token: null, error: "No Google account connected. Please connect your Google account in your profile settings." };
-    }
-    
-    const tokenData = response.data[0];
-    if (!tokenData?.token) {
-      return { token: null, error: "Google token not available. Please reconnect your Google account." };
-    }
-    
-    // Check if we have the required scopes
-    const scopes = tokenData.scopes || [];
-    const hasPhotosScope = scopes.some((s: string) => s.includes('photoslibrary'));
-    
-    if (!hasPhotosScope) {
-      return { 
-        token: null, 
-        error: "Missing Google Photos permissions. Please ask the site admin to configure the photoslibrary scope in Clerk." 
-      };
-    }
-    
-    return { token: tokenData.token };
-  } catch (err) {
-    console.error("Error getting Google token:", err);
-    return { token: null, error: "Failed to retrieve Google credentials." };
-  }
-}
+// Token retrieval + scope helpers live in @/lib/google-photos-auth
 
 /**
  * Create a new wedding album in Google Photos
@@ -64,10 +32,21 @@ export async function createWeddingAlbum(albumTitle: string): Promise<CreateAlbu
     return { success: false, error: "You must be signed in to create an album." };
   }
 
-  const { token, error: tokenError } = await getGoogleToken(userId);
-  if (!token) {
-    return { success: false, error: tokenError || "No Google connection." };
+  const authResult = await getGoogleToken(userId);
+  if (!authResult.token) {
+    return { success: false, error: authResult.error || "No Google connection." };
   }
+
+  if (!hasAppendOnly(authResult.scopes)) {
+    return {
+      success: false,
+      error:
+        "Missing Google Photos permission: photoslibrary.appendonly. " +
+        "Please reconnect your Google account after the scopes have been updated in Clerk and Google Cloud.",
+    };
+  }
+
+  const token = authResult.token;
 
   try {
     // Step 1: Create the album
@@ -89,7 +68,7 @@ export async function createWeddingAlbum(albumTitle: string): Promise<CreateAlbu
       if (createRes.status === 403) {
         return { 
           success: false, 
-          error: "Permission denied. The Google Photos scope needs to be configured in Clerk Dashboard → Social Connections → Google." 
+          error: "Permission denied. Ensure the photoslibrary.appendonly scope is configured in Clerk Dashboard → Social Connections → Google, then reconnect your Google account." 
         };
       }
       if (createRes.status === 401) {
