@@ -90,21 +90,30 @@ const WeddingSite: React.FC<WeddingSiteProps> = ({ siteId }) => {
             ownerClerkId: result.ownerClerkId || undefined
           });
         } else {
-          // Fallback to mock data if no saved site exists
-          const mockSiteData = MOCK_SITE_DATA[siteId];
-          if (mockSiteData) {
-            setData(mockSiteData);
-            setSiteInfo({ siteId });
+          // Do NOT fall back to demo couple data on public pages.
+          // In development we may still allow using mock demo data for convenience.
+          if (process.env.NODE_ENV === 'development') {
+            const mockSiteData = MOCK_SITE_DATA[siteId];
+            if (mockSiteData) {
+              setData(mockSiteData);
+              setSiteInfo({ siteId });
+            } else {
+              setError('Site not found');
+            }
           } else {
             setError('Site not found');
           }
         }
       } catch {
-        // Fallback to mock data
-        const mockSiteData = MOCK_SITE_DATA[siteId];
-        if (mockSiteData) {
-          setData(mockSiteData);
-          setSiteInfo({ siteId });
+        // On error, avoid showing demo couple data in production.
+        if (process.env.NODE_ENV === 'development') {
+          const mockSiteData = MOCK_SITE_DATA[siteId];
+          if (mockSiteData) {
+            setData(mockSiteData);
+            setSiteInfo({ siteId });
+          } else {
+            setError('Failed to load site');
+          }
         } else {
           setError('Failed to load site');
         }

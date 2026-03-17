@@ -81,17 +81,35 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
   const scrollToSection = (sectionId: string) => {
     const container = document.getElementById('preview-container');
     const element = document.getElementById(sectionId);
-    if (container && element) {
-      const offsetTop = element.offsetTop - 80; // Account for sticky nav height
-      container.scrollTo({ top: offsetTop, behavior: 'smooth' });
+    if (element) {
+      // Calculate offset relative to the container (builder preview) or window (public site)
+      const elementRect = element.getBoundingClientRect();
+      const containerScrollTop = container ? container.scrollTop : window.scrollY;
+      const offsetTop = elementRect.top + containerScrollTop - 80; // Account for sticky nav height
+      if (container) {
+        container.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      }
     }
     setIsMenuOpen(false); // Close mobile menu after navigation
   };
 
   useEffect(() => {
     const container = document.getElementById('preview-container');
-    const onScroll = () => container && setScrolled(container.scrollTop > 50);
-    container?.addEventListener('scroll', onScroll);
+    const onScroll = () => {
+      if (container) {
+        setScrolled(container.scrollTop > 50);
+      } else {
+        setScrolled(window.scrollY > 50);
+      }
+    };
+
+    if (container) {
+      container.addEventListener('scroll', onScroll);
+    } else {
+      window.addEventListener('scroll', onScroll);
+    }
 
     const target = new Date(config.targetDate).getTime();
     const timer = setInterval(() => {
@@ -104,7 +122,14 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
           seconds: Math.floor((dist / 1000) % 60),
       });
     }, 1000);
-    return () => { container?.removeEventListener('scroll', onScroll); clearInterval(timer); };
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', onScroll);
+      } else {
+        window.removeEventListener('scroll', onScroll);
+      }
+      clearInterval(timer);
+    };
   }, [config.targetDate]);
 
   return (
