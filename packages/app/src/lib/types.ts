@@ -30,7 +30,7 @@ export interface WeddingGlobal {
   heroImagePosition?: string; // e.g. 'center', 'top', 'bottom', 'left', 'right'
   navLabels: string[];
   footerLinks: string[];
-  copyright: string;
+  copyright?: string; // Deprecated — footer now auto-generates from bride/groom/city
   // Optional customizable labels for countdown and hero
   daysLabel?: string;        // Default: "Days"
   hoursLabel?: string;       // Default: "Hrs"  

@@ -245,7 +245,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
         {/* Platform Attribution */}
         <div className="py-6 px-6">
           <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-stone-600 text-[10px] uppercase tracking-widest">{global.copyright}</p>
+            <p className="text-stone-600 text-[10px] uppercase tracking-widest">{`© ${new Date().getFullYear()} ${global.bride} & ${global.groom}${global.locationCity ? ` • ${global.locationCity}` : ''}`}</p>
             <a
               href="https://wdng.online"
               target="_blank"

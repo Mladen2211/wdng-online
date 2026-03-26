@@ -27,7 +27,6 @@ const MOCK_SITE_DATA: Record<string, WeddingData> = {
       heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop',
       navLabels: ['Detalji', 'Info', 'Slike'],
       footerLinks: ['Instagram', 'Email', 'Karta'],
-      copyright: '© 2026 Emma & Liam • Zagreb'
     },
     sections: [
       {
