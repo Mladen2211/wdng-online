@@ -137,14 +137,14 @@ const INITIAL_DATA: WeddingData = {
     targetDate: 'May 10, 2026 16:00:00',
   },
   global: {
-    bride: 'Emma',
-    groom: 'Liam',
-    initials: 'E & L',
-    dateFull: '10. Svibnja 2026.',
-    dateTime: '16:00',
-    locationCity: 'Zagreb',
-    locationCountry: 'Croatia',
-    heroTitle: 'Rezervirajte Datum',
+    bride: '',
+    groom: '',
+    initials: '',
+    dateFull: '',
+    dateTime: '',
+    locationCity: '',
+    locationCountry: '',
+    heroTitle: 'Save the Date',
     heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop',
     navLabels: ['Detalji', 'Info', 'Slike'],
     footerLinks: ['Instagram', 'Email', 'Karta'],
@@ -204,7 +204,7 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
 
   const { isSignedIn, user: clerkUser } = useUser();
   const [data, setData] = useState<WeddingData>(INITIAL_DATA);
-  const [subdomain, setSubdomain] = useState('emma-liam');
+  const [subdomain, setSubdomain] = useState('');
   const [isSubdomainLocked, setIsSubdomainLocked] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
