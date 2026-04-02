@@ -13,7 +13,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
       <div className="pt-20 max-w-3xl mx-auto py-12 px-6">
         <h1 className="text-3xl font-serif text-stone-800 mb-8">Privacy Policy</h1>
         <div className="prose prose-stone">
-          <p className="mb-4">Last Updated: March 26, 2026</p>
+          <p className="mb-4">Last Updated: April 2, 2026</p>
 
           <h2 className="text-xl font-bold text-stone-800 mt-6 mb-3">1. Information We Collect</h2>
           <p className="text-stone-600 mb-4">
@@ -58,10 +58,20 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
 
           <h3 className="text-lg font-bold text-stone-800 mt-4 mb-2">Sharing, Transfer &amp; Disclosure of Google User Data</h3>
           <p className="text-stone-600 mb-4">
-            <strong>We do not share, transfer, sell, or disclose your Google user data to any third parties.</strong> Specifically:
+            <strong>We do not sell, rent, share, transfer, or disclose your Google user data to any third parties.</strong> The following describes how we handle Google user data with respect to every category of potential recipient:
           </p>
           <ul className="list-disc pl-5 text-stone-600 mb-4">
-            <li>Your Google Photos data is never shared with advertisers, data brokers, or any other external parties.</li>
+            <li><strong>Advertisers &amp; marketing partners:</strong> We never share Google user data with advertisers, ad networks, or marketing partners.</li>
+            <li><strong>Data brokers &amp; analytics providers:</strong> We never sell, license, or provide Google user data to data brokers or analytics services.</li>
+            <li><strong>Other users or the public:</strong> Google user data is not made publicly available. Photos displayed on your wedding site are served directly from Google&rsquo;s servers via your authorization; they do not pass through or get stored on our infrastructure.</li>
+            <li><strong>Affiliated companies or subsidiaries:</strong> We have no affiliated entities. Your Google user data is not transferred to any parent company, subsidiary, or affiliated organization.</li>
+            <li><strong>Sub-processors &amp; hosting providers:</strong> Our hosting infrastructure does not store or have access to your Google user data. API calls to Google Photos are made directly from our server using your encrypted OAuth token solely to fulfill your request, and no Google content is persisted on our servers.</li>
+            <li><strong>Law enforcement or government agencies:</strong> We would only disclose Google user data if legally compelled by a valid court order, subpoena, or other binding legal process. We have never received such a request to date.</li>
+          </ul>
+          <p className="text-stone-600 mb-4">
+            Additionally:
+          </p>
+          <ul className="list-disc pl-5 text-stone-600 mb-4">
             <li>Your Google OAuth access token is used only at the moment of the request to communicate directly with the Google Photos API and is not stored on our servers.</li>
             <li>Photos uploaded by guests via the app are added directly to your Google Photos album; they are not stored or cached on our servers.</li>
             <li>We do not use Google user data for advertising, profiling, or any purpose unrelated to the core features described above.</li>
@@ -84,7 +94,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
              <li><strong>Hosting Provider:</strong> For server infrastructure and database hosting. The hosting provider does not have access to your Google user data.</li>
           </ul>
           <p className="text-stone-600 mb-4">
-            We do not share your personal information or Google user data with any parties other than the service providers listed above, and only to the extent necessary to operate the Service.
+            <strong>None of the third-party service providers listed above receive, store, or have access to your Google user data</strong>, except for Google&rsquo;s own Photos API which processes data under your direct authorization. We do not share your personal information or Google user data with any parties other than as described in Section&nbsp;3 above.
           </p>
 
           <h2 className="text-xl font-bold text-stone-800 mt-6 mb-3">5. Data Security</h2>
