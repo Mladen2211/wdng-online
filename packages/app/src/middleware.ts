@@ -53,6 +53,9 @@ export default clerkMiddleware(async (auth, request) => {
 
   // All routes are public - auth is handled via modal dialogs in components
   return NextResponse.next();
+}, {
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  secretKey: process.env.CLERK_SECRET_KEY,
 });
 
 export const config = {
