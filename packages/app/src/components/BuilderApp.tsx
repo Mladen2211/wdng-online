@@ -1099,9 +1099,9 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
             <InputField label={t.builder.sectionName} value={section.name || ''} onChange={(v) => {
               onUpdateSection({ ...section, name: v });
             }} />
-            <InputField label={t.builder.sectionTitle} value={section.data.title} onChange={(v) => onUpdate({ title: v })} />
+            <InputField label={t.builder.sectionTitle} value={section.data.title} onChange={(v) => onUpdate({ ...section.data, title: v })} />
           </div>
-          {section.type !== 'faq' && <InputField label={t.builder.subtitle} value={section.data.subtitle} onChange={(v) => onUpdate({ subtitle: v })} />}
+          {section.type !== 'faq' && <InputField label={t.builder.subtitle} value={section.data.subtitle} onChange={(v) => onUpdate({ ...section.data, subtitle: v })} />}
 
           {/* Type Specific Fields */}
           {section.type === 'photos' && (
@@ -1138,7 +1138,7 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                     coordinates: { lat: 0, lng: 0 },
                     albumId: ''
                   };
-                  onUpdate({ items: [...(section.data.items || []), newItem] });
+                  onUpdate({ ...section.data, items: [...(section.data.items || []), newItem] });
                 }} className="text-xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1">
                   <Plus size={12} /> {t.builder.addEvent}
                 </button>
@@ -1154,18 +1154,18 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                     onUpdate={(updatedItem) => {
                       const newItems = [...section.data.items];
                       newItems[idx] = updatedItem;
-                      onUpdate({ items: newItems });
+                      onUpdate({ ...section.data, items: newItems });
                     }}
                     onDelete={() => {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const newItems = section.data.items.filter((i: any) => i.id !== item.id);
-                      onUpdate({ items: newItems });
+                      onUpdate({ ...section.data, items: newItems });
                     }}
                     onMove={(fromIndex, toIndex) => {
                       const newItems = [...section.data.items];
                       const [movedItem] = newItems.splice(fromIndex, 1);
                       newItems.splice(toIndex, 0, movedItem);
-                      onUpdate({ items: newItems });
+                      onUpdate({ ...section.data, items: newItems });
                     }}
                   />
                 ))}
@@ -1182,18 +1182,18 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                     <button onClick={() => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const newItems = section.data.items.filter((_: any, i: number) => i !== idx);
-                        onUpdate({ items: newItems });
+                        onUpdate({ ...section.data, items: newItems });
                     }} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
                     <InputField label={t.builder.question} value={item.q} onChange={(v) => {
-                        const newItems = [...section.data.items]; newItems[idx].q = v; onUpdate({ items: newItems });
+                        const newItems = section.data.items.map((it: any, i: number) => i === idx ? { ...it, q: v } : it); onUpdate({ ...section.data, items: newItems });
                     }} />
                     <InputField label={t.builder.answer} value={item.a} onChange={(v) => {
-                        const newItems = [...section.data.items]; newItems[idx].a = v; onUpdate({ items: newItems });
+                        const newItems = section.data.items.map((it: any, i: number) => i === idx ? { ...it, a: v } : it); onUpdate({ ...section.data, items: newItems });
                     }} />
                  </div>
                ))}
                <button onClick={() => {
-                  onUpdate({ items: [...(section.data.items || []), { q: t.builder.newQuestion || 'New Question?', a: t.builder.answerPlaceholder || 'Answer here.' }] });
+                  onUpdate({ ...section.data, items: [...(section.data.items || []), { q: t.builder.newQuestion || 'New Question?', a: t.builder.answerPlaceholder || 'Answer here.' }] });
                }} className="w-full py-2 border border-dashed border-stone-300 rounded-lg text-xs font-bold text-stone-500 hover:bg-stone-100">+ {t.builder.addQuestion}</button>
             </div>
           )}
