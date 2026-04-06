@@ -1,0 +1,80 @@
+services:
+  # 1. NGINX (The Traffic Cop)
+  nginx:
+    container_name: wdng-nginx
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "8081:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./uploads:/var/www/uploads:ro
+    depends_on:
+      - app
+    networks:
+      - wdng-network
+
+  # 2. APPLICATION (Next.js)
+  app:
+    container_name: wdng-app
+    image: ghcr.io/mladen2211/wdng-app:latest
+    restart: always
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    user: root
+    entrypoint: ["sh", "-c", "chown -R nextjs:nodejs /app/packages/app/public/uploads /app/packages/app/data && exec su-exec nextjs node packages/app/server.js"]
+    env_file:
+      - .env
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      - CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    volumes:
+      - ./uploads:/app/packages/app/public/uploads
+      - ./app-data:/app/packages/app/data
+    depends_on:
+      - db
+    networks:
+      - wdng-network
+
+  # 3. DATABASE (PostgreSQL + PostGIS)
+  db:
+    container_name: wdng-db
+    image: postgis/postgis:15-3.3
+    restart: always
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-wdng}
+    ports:
+      - "5432:5432"
+    networks:
+      - wdng-network
+
+  # 4. CLOUDFLARE TUNNEL
+  tunnel:
+    container_name: wdng-tunnel
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+      - TUNNEL_TRANSPORT_PROTOCOL=http2
+    depends_on:
+      - nginx
+    networks:
+      - wdng-network
+      - hoppdrive
+      - portfolio
+
+networks:
+  wdng-network:
+    driver: bridge
+  hoppdrive:
+    external: true
+    name: hoppdrive_default
+  portfolio:
+    external: true
+    name: portfolio_portfolio

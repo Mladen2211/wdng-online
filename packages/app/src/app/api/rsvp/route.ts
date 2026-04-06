@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         'api-key': brevoApiKey,
       },
       body: JSON.stringify({
-        sender: { name: 'WDNG.online', email: 'wdng.online@gmail.com' },
+        sender: { name: 'WDNG.online', email: 'wdng.online+rsvp@gmail.com' },
         to: validEmails.map(email => ({ email })),
         subject: `New RSVP from ${guestName} — ${coupleName}`,
         htmlContent,

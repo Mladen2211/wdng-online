@@ -296,7 +296,7 @@ const BuilderApp = ({ locale = defaultLocale }: BuilderAppProps) => {
     const newSection: Section = {
       id: `sec_${Date.now()}`,
       type: type as Section['type'],
-      data: getDefaultSectionData(type)
+      data: getDefaultSectionData(type, data.config.siteLocale || 'en')
     };
     setData(prev => ({ ...prev, sections: [...prev.sections, newSection] }));
     setIsAddModalOpen(false);
@@ -1215,6 +1215,17 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                </div>
 
                <div>
+                 <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">{t.builder.alternativeContactText}</label>
+                 <textarea
+                   value={section.data.alternativeContactText || ''}
+                   onChange={(e) => onUpdate({ ...section.data, alternativeContactText: e.target.value })}
+                   placeholder={t.builder.alternativeContactTextHint}
+                   rows={2}
+                   className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-800 focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+                 />
+               </div>
+
+               <div>
                  <div className="flex items-center justify-between mb-2">
                    <label className="block text-xs font-bold text-stone-400 uppercase">{t.builder.formFields}</label>
                    <button 
@@ -1241,8 +1252,7 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                      
                      <div className="grid grid-cols-2 gap-2">
                        <InputField label={t.builder.label} value={field.label} onChange={(v) => {
-                         const newFields = [...section.data.fields];
-                         newFields[idx].label = v;
+                         const newFields = section.data.fields.map((f: any, i: number) => i === idx ? { ...f, label: v } : f);
                          onUpdate({ ...section.data, fields: newFields });
                        }} />
                        <div>
@@ -1250,8 +1260,7 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                          <select
                            value={field.type}
                            onChange={(e) => {
-                             const newFields = [...section.data.fields];
-                             newFields[idx].type = e.target.value;
+                             const newFields = section.data.fields.map((f: any, i: number) => i === idx ? { ...f, type: e.target.value } : f);
                              onUpdate({ ...section.data, fields: newFields });
                            }}
                            className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm font-medium text-stone-800 bg-white outline-none focus:ring-2 focus:ring-amber-500"
@@ -1270,8 +1279,7 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                            type="checkbox"
                            checked={field.required}
                            onChange={(e) => {
-                             const newFields = [...section.data.fields];
-                             newFields[idx].required = e.target.checked;
+                             const newFields = section.data.fields.map((f: any, i: number) => i === idx ? { ...f, required: e.target.checked } : f);
                              onUpdate({ ...section.data, fields: newFields });
                            }}
                            className="rounded border-stone-300"
@@ -1287,8 +1295,7 @@ const SectionEditor = ({ section, index, translations: t, onDelete, onUpdate, on
                            type="text"
                            value={(field.options || []).join(', ')}
                            onChange={(e) => {
-                             const newFields = [...section.data.fields];
-                             newFields[idx].options = e.target.value.split(',').map((o: string) => o.trim()).filter(Boolean);
+                             const newFields = section.data.fields.map((f: any, i: number) => i === idx ? { ...f, options: e.target.value.split(',').map((o: string) => o.trim()).filter(Boolean) } : f);
                              onUpdate({ ...section.data, fields: newFields });
                            }}
                            placeholder="Option 1, Option 2, Option 3"
@@ -1490,26 +1497,22 @@ const EventItemEditor = ({ item, index, onUpdate, onDelete, onMove }: {
   );
 };
 
-const getDefaultSectionData = (type: string) => {
+const getDefaultSectionData = (type: string, locale: string = 'en') => {
+  const translations = SITE_TRANSLATIONS[locale as keyof typeof SITE_TRANSLATIONS] || SITE_TRANSLATIONS.en;
   switch (type) {
     case 'events': return { title: 'Event Timeline', subtitle: 'Join us for the celebration', items: [{ id: 1, title: 'Ceremony', time: '16:00', location: 'Main Hall', iconType: 'clock' }] };
     case 'photos': return { title: 'Photo Gallery', subtitle: 'Share your memories', buttonLabel: 'Upload', image: 'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?q=80&w=2000&auto=format&fit=crop' };
     case 'faq': return { title: 'Q&A', items: [{ q: 'Question?', a: 'Answer.' }] };
     case 'text': return { title: 'Our Story', subtitle: 'Once upon a time...' };
     case 'rsvp': return { 
-      title: 'Will you attend?', 
-      subtitle: 'Please let us know if you can make it.',
+      title: translations.rsvp.title, 
+      subtitle: translations.rsvp.subtitle,
       deadline: '',
-      respondByLabel: 'Please respond by',
-      submitLabel: 'Send RSVP',
-      selectOptionLabel: 'Select an option',
-      enterYourLabel: 'Enter your',
-      fields: [
-        { id: 'name', label: 'Full Name', type: 'text', required: true },
-        { id: 'email', label: 'Email', type: 'email', required: true },
-        { id: 'attendance', label: 'Will you attend?', type: 'select', required: true, options: ['Yes, I will be there!', 'Sorry, I cannot attend'] },
-        { id: 'dietary', label: 'Dietary Requirements', type: 'textarea', required: false }
-      ]
+      respondByLabel: translations.rsvp.respondByLabel,
+      submitLabel: translations.rsvp.submitLabel,
+      selectOptionLabel: translations.rsvp.selectOptionLabel,
+      enterYourLabel: translations.rsvp.enterYourLabel,
+      fields: translations.rsvp.fields.map(f => ({ ...f }))
     };
     default: return { title: 'New Section' };
   }

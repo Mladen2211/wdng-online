@@ -111,6 +111,8 @@ export interface RsvpData {
   submitLabel?: string;       // Default: "Send RSVP"
   selectOptionLabel?: string; // Default: "Select an option"
   enterYourLabel?: string;    // Default: "Enter your"
+  // Optional text shown below the form (e.g. "Or let us know by phone/WhatsApp")
+  alternativeContactText?: string;
 }
 
 export interface RsvpField {

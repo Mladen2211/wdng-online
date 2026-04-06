@@ -687,6 +687,12 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
               </button>
             </form>
           )}
+          
+          {data.alternativeContactText && (
+            <p className={`text-center text-sm ${theme.textMuted} mt-6 whitespace-pre-line`}>
+              {data.alternativeContactText}
+            </p>
+          )}
         </div>
       </section>
     );
