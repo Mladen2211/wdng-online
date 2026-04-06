@@ -10,7 +10,8 @@ export default clerkMiddleware(async (auth, request) => {
   const subdomain = hostname.split('.')[0];
 
   // If it's a subdomain (user wedding sites), rewrite to sites route
-  if (subdomain && subdomain !== 'www' && subdomain !== 'localhost' && hostname.includes('.wdng.online')) {
+  // But skip API routes so they hit the actual API handlers
+  if (subdomain && subdomain !== 'www' && subdomain !== 'localhost' && hostname.includes('.wdng.online') && !pathname.startsWith('/api')) {
     return NextResponse.rewrite(new URL(`/sites/${subdomain}${pathname}`, request.url));
   }
 
