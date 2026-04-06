@@ -193,6 +193,7 @@ const WeddingPreview: React.FC<WeddingPreviewProps> = ({ data, siteInfo, isPrevi
             sectionIndex={index} 
             isPreview={isPreview}
             siteInfo={siteInfo}
+            coupleName={`${global.bride} & ${global.groom}`}
             galleryRefreshKey={galleryRefreshKey}
             onUploadComplete={handleUploadComplete}
           />
@@ -366,12 +367,14 @@ interface SectionRendererProps {
   sectionIndex: number;
   isPreview: boolean;
   siteInfo?: SiteInfo;
+  coupleName: string;
   galleryRefreshKey?: number;
   onUploadComplete?: () => void;
 }
 
-const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layout, sectionIndex, isPreview, siteInfo, galleryRefreshKey, onUploadComplete }) => {
+const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layout, sectionIndex, isPreview, siteInfo, coupleName, galleryRefreshKey, onUploadComplete }) => {
   const { type, data } = section;
+  const [rsvpStatus, setRsvpStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   const handleLocationClick = (item: any) => {
     if (item.coordinates && item.coordinates.lat && item.coordinates.lng) {
@@ -559,6 +562,51 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
     const selectOptionLabel = data.selectOptionLabel || 'Select an option';
     const enterYourLabel = data.enterYourLabel || 'Enter your';
 
+    const handleRsvpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (isPreview || rsvpStatus === 'sending') return;
+
+      const formData = new FormData(e.currentTarget);
+      const fields = (data.fields || []).map((field: any) => ({
+        label: field.label,
+        value: formData.get(`rsvp-${field.id}`)?.toString() || '',
+      }));
+
+      // Validate required fields
+      for (const field of data.fields || []) {
+        const value = formData.get(`rsvp-${field.id}`)?.toString() || '';
+        if (field.required && !value.trim()) return;
+      }
+
+      const notifyEmails = (data.notifyEmails || '')
+        .split(',')
+        .map((e: string) => e.trim())
+        .filter(Boolean);
+
+      if (notifyEmails.length === 0) {
+        // No emails configured — just show success
+        setRsvpStatus('sent');
+        return;
+      }
+
+      setRsvpStatus('sending');
+      try {
+        const res = await fetch('/api/rsvp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            siteId: siteInfo?.siteId || '',
+            coupleName,
+            notifyEmails,
+            fields,
+          }),
+        });
+        setRsvpStatus(res.ok ? 'sent' : 'error');
+      } catch {
+        setRsvpStatus('error');
+      }
+    };
+
     return (
       <section id={`section-${sectionIndex}`} className={`py-20 px-6 ${theme.bg}`}>
         <div className="max-w-xl mx-auto">
@@ -575,46 +623,70 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
             )}
           </div>
           
-          <form className={`bg-white p-8 rounded-2xl shadow-lg border ${theme.border}`}>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {data.fields?.map((field: any, idx: number) => (
-              <div key={idx} className="mb-6 last:mb-0">
-                <label htmlFor={`rsvp-field-${idx}`} className={`block text-sm font-medium ${theme.text} mb-2`}>
-                  {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                {field.type === 'textarea' ? (
-                  <textarea
-                    id={`rsvp-field-${idx}`}
-                    placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
-                    rows={3}
-                    className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none resize-none`}
-                  />
-                ) : field.type === 'select' ? (
-                  <select id={`rsvp-field-${idx}`} className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none bg-white`}>
-                    <option value="">{selectOptionLabel}</option>
-                    {field.options?.map((opt: string, optIdx: number) => (
-                      <option key={optIdx} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    id={`rsvp-field-${idx}`}
-                    type={field.type}
-                    placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
-                    className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none`}
-                  />
-                )}
+          {rsvpStatus === 'sent' ? (
+            <div className={`bg-white p-8 rounded-2xl shadow-lg border ${theme.border} text-center`}>
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-50 rounded-full flex items-center justify-center">
+                <Heart size={28} className="text-green-500" />
               </div>
-            ))}
-            
-            <button
-              type="submit"
-              className={`w-full py-4 rounded-xl font-bold text-lg ${theme.button} transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5`}
-            >
-              {submitLabel}
-            </button>
-          </form>
+              <h3 className={`font-serif text-2xl ${theme.text} mb-2`}>Thank you!</h3>
+              <p className={`${theme.textMuted}`}>Your response has been received.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleRsvpSubmit} className={`bg-white p-8 rounded-2xl shadow-lg border ${theme.border}`}>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {data.fields?.map((field: any, idx: number) => (
+                <div key={idx} className="mb-6 last:mb-0">
+                  <label htmlFor={`rsvp-field-${idx}`} className={`block text-sm font-medium ${theme.text} mb-2`}>
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  {field.type === 'textarea' ? (
+                    <textarea
+                      id={`rsvp-field-${idx}`}
+                      name={`rsvp-${field.id}`}
+                      required={field.required}
+                      placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
+                      rows={3}
+                      className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none resize-none`}
+                    />
+                  ) : field.type === 'select' ? (
+                    <select
+                      id={`rsvp-field-${idx}`}
+                      name={`rsvp-${field.id}`}
+                      required={field.required}
+                      className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none bg-white`}
+                    >
+                      <option value="">{selectOptionLabel}</option>
+                      {field.options?.map((opt: string, optIdx: number) => (
+                        <option key={optIdx} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      id={`rsvp-field-${idx}`}
+                      name={`rsvp-${field.id}`}
+                      type={field.type}
+                      required={field.required}
+                      placeholder={`${enterYourLabel} ${field.label.toLowerCase()}...`}
+                      className={`w-full px-4 py-3 rounded-lg border ${theme.border} focus:ring-2 focus:ring-amber-500 outline-none`}
+                    />
+                  )}
+                </div>
+              ))}
+              
+              {rsvpStatus === 'error' && (
+                <p className="text-red-500 text-sm text-center mb-4">Something went wrong. Please try again.</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={rsvpStatus === 'sending'}
+                className={`w-full py-4 rounded-xl font-bold text-lg ${theme.button} transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50`}
+              >
+                {rsvpStatus === 'sending' ? '...' : submitLabel}
+              </button>
+            </form>
+          )}
         </div>
       </section>
     );

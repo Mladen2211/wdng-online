@@ -104,6 +104,8 @@ export interface RsvpData {
   subtitle?: string;
   deadline?: string;
   fields: RsvpField[];
+  // Email addresses to receive RSVP notifications (comma-separated)
+  notifyEmails?: string;
   // Translatable labels for the RSVP form display
   respondByLabel?: string;    // Default: "Please respond by"
   submitLabel?: string;       // Default: "Send RSVP"
