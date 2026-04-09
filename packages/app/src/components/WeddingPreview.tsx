@@ -412,11 +412,11 @@ const AddToCalendarButton = ({ item, weddingDate, coupleName, theme }: { item: a
     <div className="relative inline-block">
       <button
         onClick={() => setOpen(!open)}
-        className={`inline-flex items-center gap-1 text-xs ${theme.accent} hover:opacity-80 transition-opacity`}
+        className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border ${theme.border} ${theme.accent} bg-white hover:bg-stone-50 transition-colors shadow-sm`}
         title="Add to calendar"
       >
         <Calendar size={14} />
-        <span className="hidden sm:inline">Add to Calendar</span>
+        Add to Calendar
       </button>
       {open && (
         <>
