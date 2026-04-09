@@ -360,24 +360,29 @@ const HeroRenderer: React.FC<HeroRendererProps> = ({ layout, theme, global, time
 };
 
 // --- ADD TO CALENDAR HELPERS ---
-const buildCalendarEvent = (item: any, weddingDate: string, coupleName: string) => {
+const buildWeddingCalendarEvent = (items: any[], weddingDate: string, coupleName: string) => {
   const date = new Date(weddingDate);
-  // Parse time like "16:00" from the event
-  const timeParts = item.time?.match(/(\d{1,2}):(\d{2})/);
+  // Use the first event's time as start
+  const firstTime = items?.[0]?.time;
+  const timeParts = firstTime?.match(/(\d{1,2}):(\d{2})/);
   if (timeParts) {
     date.setHours(parseInt(timeParts[1], 10), parseInt(timeParts[2], 10), 0, 0);
   }
-  const endDate = new Date(date.getTime() + 2 * 60 * 60 * 1000); // +2 hours default
+  // End next day at 06:00
+  const endDate = new Date(date);
+  endDate.setDate(endDate.getDate() + 1);
+  endDate.setHours(6, 0, 0, 0);
 
   const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const start = fmt(date);
   const end = fmt(endDate);
+  const location = items?.[0]?.location || '';
 
-  return { start, end, title: `${item.title} — ${coupleName}`, location: item.location || '', description: item.description || '' };
+  return { start, end, title: coupleName, location, description: '' };
 };
 
-const downloadIcs = (item: any, weddingDate: string, coupleName: string) => {
-  const ev = buildCalendarEvent(item, weddingDate, coupleName);
+const downloadIcs = (items: any[], weddingDate: string, coupleName: string) => {
+  const ev = buildWeddingCalendarEvent(items, weddingDate, coupleName);
   const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -395,18 +400,18 @@ const downloadIcs = (item: any, weddingDate: string, coupleName: string) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${item.title.replace(/\s+/g, '_')}.ics`;
+  a.download = `${coupleName.replace(/\s+/g, '_')}_Wedding.ics`;
   a.click();
   URL.revokeObjectURL(url);
 };
 
-const openGoogleCalendar = (item: any, weddingDate: string, coupleName: string) => {
-  const ev = buildCalendarEvent(item, weddingDate, coupleName);
+const openGoogleCalendar = (items: any[], weddingDate: string, coupleName: string) => {
+  const ev = buildWeddingCalendarEvent(items, weddingDate, coupleName);
   const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${ev.start}/${ev.end}&location=${encodeURIComponent(ev.location)}&details=${encodeURIComponent(ev.description)}`;
   window.open(url, '_blank');
 };
 
-const AddToCalendarButton = ({ item, weddingDate, coupleName, theme }: { item: any; weddingDate: string; coupleName: string; theme: any }) => {
+const AddToCalendarButton = ({ items, weddingDate, coupleName, theme }: { items: any[]; weddingDate: string; coupleName: string; theme: any }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative inline-block">
@@ -423,13 +428,13 @@ const AddToCalendarButton = ({ item, weddingDate, coupleName, theme }: { item: a
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute z-50 mt-1 left-0 bg-white rounded-lg shadow-lg border border-stone-200 py-1 min-w-[180px]">
             <button
-              onClick={() => { openGoogleCalendar(item, weddingDate, coupleName); setOpen(false); }}
+              onClick={() => { openGoogleCalendar(items, weddingDate, coupleName); setOpen(false); }}
               className="w-full text-left px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
             >
               Google Calendar
             </button>
             <button
-              onClick={() => { downloadIcs(item, weddingDate, coupleName); setOpen(false); }}
+              onClick={() => { downloadIcs(items, weddingDate, coupleName); setOpen(false); }}
               className="w-full text-left px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
             >
               Apple / Outlook (.ics)
@@ -492,11 +497,6 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                        {item.location}
                      </button>
                      <div className="text-xl font-serif italic">{item.time}</div>
-                     {weddingDate && !isPreview && (
-                       <div className="mt-3">
-                         <AddToCalendarButton item={item} weddingDate={weddingDate} coupleName={coupleName} theme={theme} />
-                       </div>
-                     )}
                   </div>
                 ) : (
                   <div key={idx} className="bg-white p-8 rounded-2xl shadow-sm border border-stone-100 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
@@ -520,16 +520,16 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({ section, theme, layou
                           <span className={theme.accent}>{item.time}</span>
                         </div>
                         {item.description && <p className="text-stone-400 text-sm mt-2">{item.description}</p>}
-                        {weddingDate && !isPreview && (
-                          <div className="mt-2">
-                            <AddToCalendarButton item={item} weddingDate={weddingDate} coupleName={coupleName} theme={theme} />
-                          </div>
-                        )}
                      </div>
                   </div>
                 )
              ))}
           </div>
+          {weddingDate && !isPreview && data.items?.length > 0 && (
+            <div className="mt-10 text-center">
+              <AddToCalendarButton items={data.items} weddingDate={weddingDate} coupleName={coupleName} theme={theme} />
+            </div>
+          )}
         </div>
       </section>
     );
